@@ -1,0 +1,113 @@
+#Start Kafka
+nohup /home/stp/Downloads/kafka_2.11-0.10.1.0/bin/zookeeper-server-start.sh /home/stp/Downloads/kafka_2.11-0.10.1.0/config/zookeeper.properties &
+nohup /home/stp/Downloads/kafka_2.11-0.10.1.0/bin/kafka-server-start.sh /home/stp/Downloads/kafka_2.11-0.10.1.0/config/server.properties > kafka.out &
+
+#create  Kafka topic
+/home/stp/Downloads/kafka_2.11-0.10.1.0/bin/kafka-topics.sh  --zookeeper localhost:2181 --create --topic testDataGlen --partitions 1 --replication-factor 1
+
+/home/stp/Downloads/kafka_2.11-0.10.1.0/bin/kafka-topics.sh  --zookeeper localhost:2181 --list
+testDataGlen
+ 
+# install python Producer  
+sudo yum install librdkafka-devel
+sudo pip3.5  install confluent-kafka
+sudo pip3.5 install confluent-kafka[avro]
+
+from confluent_kafka import Producer
+import time
+import datetime as dt
+conf = {'bootstrap.servers': 'localhost:9092', 'api.version.request': True, 'broker.version.fallback' : '0.8.2.1'}
+conf = {'bootstrap.servers': 'localhost:9092', 'api.version.request': True}
+p = Producer(conf)
+
+# Generate messages every 30 seconds for 2 mins i.e 4 messages per key
+for i in range(1,5):
+  # Generate messages every 30 seconds for 5 diffrent keys 
+  for id in range(1,6):
+    message = {"TIMESTAMP": str(dt.datetime.today()) , "val": id, "key": "Key{}".format(id)  }
+    p.produce(topic='testDataGlen', key = message['key'], value=str(message).encode('utf-8') )
+  time.sleep(2)
+
+  
+def produceMsg(id):
+    #message = {"TIMESTAMP": str(dt.datetime.today()) , "val": id, "key": "Key{}".format(id)  }
+    p.produce(topic='testDataGlen', key = "Key{}".format(id), value=str({"TIMESTAMP": str(dt.datetime.today()) , "val": id, "key": "Key{}".format(id)).encode('utf-8') )
+  
+[map(lambda id: produceMsg, list(range(1,6)) ) for y in range(1,5)]
+
+p.flush() 
+
+
+# Check with simple consumer if its working 
+/home/stp/Downloads/kafka_2.11-0.10.1.0/bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic testDataGlen
+from confluent_kafka import Consumer, KafkaError
+c = Consumer({'bootstrap.servers': 'localhost', 'api.version.request': True, 'broker.version.fallback' : '0.8.2.1' , 'group.id': 'mygroup', 'default.topic.config': {'auto.offset.reset': 'smallest'}})
+c.subscribe(['testDataGlen'])
+running = True
+while running:
+    msg = c.poll()
+    if not msg.error():
+        print('Received message: %s' % msg.value().decode('utf-8'))
+    elif msg.error().code() != KafkaError._PARTITION_EOF:
+        print(msg.error())
+        running = False
+c.close()
+
+
+#Spark 2.1.0 
+#Spark kafka consumer 
+#kafka-clients-0.10.1.0.jar
+#install library like  spark-sql-kafka-0-10_2.11-2.1.0.jar , spark-streaming_2.11-2.1.0.jar, 
+
+##{'TIMESTAMP': '2017-03-28 15:59:46.944476', 'key': 'Key1', 'val': 1}
+
+from pyspark.sql.types import *
+from pyspark.sql.types import StructField
+from pyspark.sql.functions import window
+from pyspark.sql import functions as Func
+from pyspark.sql.window import Window
+
+jschema = StructType([StructField('TIMESTAMP', TimestampType(), True), StructField('key', StringType(), True), StructField('val', IntegerType(), True)])
+
+#df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "localhost").option("subscribe", "testDataGlen").load()
+jfdf = spark.readStream.format("text").load(path="/home/stp/DataGlen/data.json", schema=jschema )
+jdf = spark.readStream.json(path="/home/stp/DataGlen/data.json", schema=jschema )
+
+
+
+## read file
+from pyspark.sql.types import *
+from pyspark.sql.types import StructField
+from pyspark.sql.functions import window
+from pyspark.sql import functions as Func
+from pyspark.sql.window import Window
+
+jschema = StructType([StructField('TIMESTAMP', TimestampType(), True), StructField('key', StringType(), True), StructField('val', IntegerType(), True)])
+jfdf = spark.read.json(path="/home/stp/DataGlen/data.json", schema=jschema )
+jfdf.show()
+windowedGroupFuncaggDF  =  jfdf.groupBy(window(jfdf.TIMESTAMP, "2 minutes", "2 minutes"), "key" ) \
+.agg(Func.count("val") , Func.sum("val") , Func.mean("val") , Func.collect_list("TIMESTAMP")  , Func.collect_list("val")  ) \
+.select( Func.col("count(val)").alias("count"), Func.col("window").alias("TIMESTAMP"), Func.col("avg(val)").alias("mean"), Func.col("sum(val)").alias("sum") , Func.col("collect_list(TIMESTAMP)").alias("ts")  , Func.col("collect_list(val)").alias("vals") )
+windowedGroupFuncaggDF.show()
+
+
+
+## stream file
+from pyspark.sql.types import *
+from pyspark.sql.types import StructField
+from pyspark.sql.functions import window
+from pyspark.sql import functions as Func
+from pyspark.sql.window import Window
+
+jschema = StructType([StructField('TIMESTAMP', TimestampType(), True), StructField('key', StringType(), True), StructField('val', IntegerType(), True)])
+jfdf = spark.readStream.option("basePath", "/home/stp/DataGlen/").format("text").load(path="/home/stp/DataGlen/data.json", schema=jschema )
+
+windowedGroupFuncaggDF  =  jfdf.groupBy(window(jfdf.TIMESTAMP, "2 minutes", "2 minutes"), "key" ) \
+.agg(Func.count("val") , Func.sum("val") , Func.mean("val") , Func.collect_list("TIMESTAMP")  , Func.collect_list("val")  ) \
+.select( Func.col("count(val)").alias("count"), Func.col("window").alias("TIMESTAMP"), Func.col("avg(val)").alias("mean"), Func.col("sum(val)").alias("sum") , Func.col("collect_list(TIMESTAMP)").alias("ts")  , Func.col("collect_list(val)").alias("vals") )
+windowedGroupFuncaggDF.writeStream.format("console").outputMode("complete").start()
+
+windowedGroupFuncaggDF.show()
+
+
+
