@@ -1,0 +1,16 @@
+Class,Freq 1,Freq 2,Freq 3,Freq 4
+Spam,free,buy,limited,hurry
+Ham,reply,data,report,presentation
+Ham,report,presentation,file,end of day
+Spam,limited,file,buy,click
+Ham,meeting,timelines,limited,documents
+Spam,hurry,data,buy,stock
+Spam,limited,sex,click,viagra
+Ham,presentation,end of day,data,report
+Ham,reply,data,presentation,click
+Spam,free,reply,weekend,click
+Spam,limited,click,free,hurry
+Ham,meeting,end of day,weekend,data
+Spam,hurry,weekend,stock,offer
+Ham,report ,presentation,file,end of day
+Ham,free,timelines,reply,offer
