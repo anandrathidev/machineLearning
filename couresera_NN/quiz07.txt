@@ -1,0 +1,181 @@
+Wxh=-0.1 
+Whh=0.5 
+Why=0.25 
+hbias=0.4
+ybias=0.0
+x0=18
+x1=9
+x2=-8
+
+t0=0.1
+t1=-0.1
+t2=-0.2 
+
+z0=Wxh*x0+hbias
+h0 = 1 ./ (1 + e.^(-z0))
+y0=Why*h0+ybias
+E0=((t0-y0)^2)/2
+
+z1=Wxh*x1+Whh*h0+hbias
+h1 = 1 ./ (1 + e.^(-z1))
+y1=Why*h1+ybias
+E1=((t1-y1)^2)/2
+
+
+z2=Wxh*x2+Whh*h1+hbias
+h2 = 1 ./ (1 + e.^(-z2))
+y2=Why*h2+ybias
+E2=((t2-y2)^2)/2
+
+E=E0+E1+E2
+
+
+Wxh=0.5
+Whh=-1.0
+Why=-0.7
+hbias=-1.0
+ybias=0.0
+x0=9
+x1=4
+x2=-2
+
+z0=Wxh * x0 + hbias
+h0 = 1 ./ (1 + e.^(-z0))
+y0= Why*h0+ybias
+
+z1=Wxh*x1+Whh*h0+hbias
+h1 = 1 ./ (1 + e.^(-z1))
+y1=Why*h1+ybias
+
+z2=Wxh*x2+Whh*h1+hbias
+h2 = 1 ./ (1 + e.^(-z2))
+y2=Why*h2+ybias
+
+
+
+Back
+Lecture 7 Quiz
+Quiz, 6 questions
+6/6 points (100%)
+Congratulations! You passed!
+Next Item
+
+Correct
+1 / 1 points
+1. 
+How many bits of information can be modeled by the hidden state (at some specific time) of a Hidden Markov Model with 16 hidden units?
+
+4
+Correct 
+
+>16
+
+2
+
+16
+
+Correct
+1 / 1 points
+2. 
+This question is about speech recognition. To accurately recognize what phoneme is being spoken at a particular time, one needs to know the sound data from 100ms before that time to 100ms after that time, i.e. a total of 200ms of sound data. Which of the following setups have access to enough sound data to recognize what phoneme was being spoken 100ms into the past?
+
+A Recurrent Neural Network (RNN) with 200ms of input
+Correct 
+
+A feed forward Neural Network with 200ms of input
+Correct 
+A feed forward Neural Network can be used only in case it is given all the input it needs for the recognition task because it doesn't store the input history.
+
+A Recurrent Neural Network (RNN) with 30ms of input
+Correct 
+RNN can reliably memorize long term history due to its temporal connections between hidden states.
+
+A feed forward Neural Network with 30ms of input
+Un-selected is correct 
+Correct
+1 / 1 points
+3. 
+The figure below shows a Recurrent Neural Network (RNN) with one input unit x, one logistic hidden unit h, and one linear output unit
+
+y. The RNN is unrolled in time for T=0,1, and 2.
+
+
+The network parameters are: Wxh=0.5 , Whh=−1.0 , Why=−0.7 , hbias=−1.0, and ybias=0.0. Remember, σ(k)=11+exp(−k).
+
+If the input x takes the values 9,4,−2 at time steps 0,1,2 respectively, what is the value of the hidden state h at T=2? Give your answer with at least two digits after the decimal point.
+
+0.075346
+Correct Response 
+Correct
+1 / 1 points
+4. 
+The figure below shows a Recurrent Neural Network (RNN) with one input unit x, one logistic hidden unit h, and one linear output unit
+
+y. The RNN is unrolled in time for T=0,1, and 2.
+
+
+The network parameters are: Wxh=−0.1 , Whh=0.5 , Why=0.25 , hbias=0.4, and ybias=0.0.
+
+If the input x takes the values 18,9,−8 at time steps 0,1,2 respectively, the hidden unit values will be 0.2,0.4,0.8 and the output unit values will be 0.05,0.1,0.2 (you can check these values as an exercise).
+
+A variable z is defined as the total input to the hidden unit before the logistic nonlinearity.
+
+If we are using the squared loss, with targets t0,t1,t2, then the sequence of calculations required to compute the total error E is as follows:
+
+z0=h0=y0=E0=E=Wxhx0+hbiasσ(z0)Whyh0+ybias12(t0−y0)2E0+E1+E2z1=h1=y1=E1=Wxhx1+Whhh0+hbiasσ(z1)Whyh1+ybias12(t1−y1)2z2=h2=y2=E2=Wxhx2+Whhh1+hbiasσ(z2)Whyh2+ybias12(t2−y2)2
+If the target output values are t0=0.1,t1=−0.1,t2=−0.2 and the squared error loss is used, what is the value of the error derivative just before the hidden unit nonlinearity at T=2 (i.e. ∂E∂z2)? Write your answer up to at least the fourth decimal place.
+
+0.020053
+Correct Response 
+We need to calculate ∂E∂z2. We can do this by backpropagation:
+
+∂E∂z2==∂E2∂z2∂E∂y2∂y2∂h2∂h2∂z2
+The first equality holds because only the error at the last time step depends on z2.
+
+Correct
+1 / 1 points
+5. 
+Consider a Recurrent Neural Network with one input unit, one logistic hidden unit, and one linear output unit. This RNN is for modeling sequences of
+
+length 4 only, and the output unit exists only at the last time step, i.e. T=3. This diagram shows the RNN unrolled in time:
+
+
+Suppose that the model has learned the following parameter values:
+
+wxh=1
+whh=−2
+why=1
+All biases are 0
+For one specific training case, the input is 1 at T=0 and 0 at T=1, T=2, and T=3. The target output (at T=3) is 0.5, and we're using the squared error
+
+loss function.
+
+We're interested in the gradient for wxh, i.e. ∂E∂wxh. Because it's only at T=0 that the input is not zero, and it's only at T=3 that there's an output, the
+
+error needs to be backpropagated from T=3 to T=0, and that's the kind of situations where RNN's often get either vanishing gradients or exploding
+
+gradients. Which of those two occurs in this situation?
+
+You can either do the calculations, and find the answer that way, or you can find the answer with more thinking and less math, by thinking about the
+
+slope ∂y∂z of the logistic function, and what role that plays in the backpropagation process.
+
+Vanishing gradient
+Correct 
+
+Exploding gradient
+
+Correct
+1 / 1 points
+6. 
+Consider the following Recurrent Neural Network (RNN):
+
+
+As you can see, the RNN has two input units, two hidden units, and one output unit.
+
+For this question, every arrow denotes the effect of a variable at time t on a variable at time t+1.
+
+Which feed forward Neural Network is equivalent to this network unrolled in time?
+
+
+Correct 
