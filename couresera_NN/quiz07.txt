@@ -179,3 +179,56 @@ Which feed forward Neural Network is equivalent to this network unrolled in time
 
 
 Correct 
+
+
+ Wxh=-0.1
+Wxh = -0.10000
+>> Whh=0.5
+Whh =  0.50000
+>> Why=0.25
+Why =  0.25000
+>> hbias=0.4
+hbias =  0.40000
+>> ybias=0.0
+ybias = 0
+>> x0=18
+x0 =  18
+>> x1=9
+x1 =  9
+>> x2=-8
+x2 = -8
+>> t0=0.1
+t0 =  0.10000
+>> t1=-0.1
+t1 = -0.10000
+>> t2=-0.2
+t2 = -0.20000
+>> z0=Wxh*x0+hbias
+z0 = -1.4000
+>> h0 = 1 ./ (1 + e.^(-z0))
+h0 =  0.19782
+>> y0=Why*h0+ybias
+y0 =  0.049454
+>> E0=((t0-y0)^2)/2
+E0 =  0.0012774
+>> z1=Wxh*x1+Whh*h0+hbias
+z1 = -0.40109
+>> h1 = 1 ./ (1 + e.^(-z1))
+h1 =  0.40105
+>> y1=Why*h1+ybias
+y1 =  0.10026
+>> E1=((t1-y1)^2)/2
+E1 =  0.020053
+>> z2=Wxh*x2+Whh*h1+hbias
+z2 =  1.4005
+>> h2 = 1 ./ (1 + e.^(-z2))
+h2 =  0.80227
+>> y2=Why*h2+ybias
+y2 =  0.20057
+>> E2=((t2-y2)^2)/2
+E2 =  0.080227
+>> E=E0+E1+E2
+E =  0.10156
+  
+
+  
