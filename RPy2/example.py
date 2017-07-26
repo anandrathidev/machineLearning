@@ -16,7 +16,7 @@ import rpy2.rinterface as rinterface
 base = importr('base')
 stats = importr('stats')
 
-testdf=pandas.read_csv('C:/Users/rb117/Documents/work/POC_analytics/Data/DATAMARTv2.tsv', sep = '\t', encoding = 'iso-8859-1', index_col=0)
+testdf=pandas.read_csv('C:/Users/rb/Documents/work/POC_analytics/Data/DATAMARTv2.tsv', sep = '\t', encoding = 'iso-8859-1', index_col=0)
 testdf.describe()
 list(testdf)
 testdf.dtypes
@@ -24,8 +24,8 @@ len(testdf['first_name'])
 first_name = robjects.StrVector(testdf['first_name'])
 len(first_name )
 
-rinterface.globalenv["campaign_result"]  = rinterface.baseenv['as.character'](rinterface.StrSexpVector( testdf['campaign_result'] ) ) 
-rinterface.globalenv["campaign_result"]  = rinterface.baseenv['as.character'](rinterface.StrSexpVector( testdf['campaign_result'] ) ) 
+rinterface.globalenv["labels"]  = rinterface.baseenv['as.character'](rinterface.StrSexpVector( testdf['labels'] ) ) 
+rinterface.globalenv["labels"]  = rinterface.baseenv['as.character'](rinterface.StrSexpVector( testdf['labels'] ) ) 
 
 rinterface.globalenv.keys()
 
@@ -33,7 +33,7 @@ rDataframe = rinterface.baseenv["data.frame"]
 rColNames = rinterface.baseenv["names"]
 rclass = rinterface.baseenv["class"]
 
-rinterface.globalenv["testDF"] =   rDataframe( campaign_result = rinterface.globalenv["campaign_result"] , stringsAsFactors =  rinterface.BoolSexpVector((False, )) )
+rinterface.globalenv["testDF"] =   rDataframe( labels = rinterface.globalenv["labels"] , stringsAsFactors =  rinterface.BoolSexpVector((False, )) )
 pytestDFDF3 = rinterface.globalenv["testDF"] 
 pycolnames = rclass(pytestDFDF3)
 pytestDFDF4  = robjects.DataFrame(pytestDFDF3)
