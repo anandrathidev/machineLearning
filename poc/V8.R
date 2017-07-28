@@ -503,6 +503,7 @@ DFAnalize_campaign_resultBal[which(is.na(DFAnalize_campaign_resultBal)),]
 #Train_campaign_result <- ROSE(campaign_result ~ ., data = DFAnalize_campaign_resultBal, seed = 123, N=5000)$data
 Train_campaign_result <- ROSE(campaign_result ~ ., data = DFAnalize_campaign_resultBal, seed = 123)$data
 TrainTest <- SamplTrainTest(DFAnalize_campaign_resultBal, perc=0.80)
+TrainTest <- SamplTrainTest(Train_campaign_result, perc=0.80)
 Train_campaign_result <- data.frame(TrainTest[1])
 Test_campaign_result <- data.frame(TrainTest[2])
 
@@ -1028,6 +1029,17 @@ plotLift(predicted = predProbsAllOUI2$Geom, predProbsAllOUI2$ClassOUI, main= "Ge
 
 lift2 <- lift( Class ~ Final+Mean+Geom, data = predProbsAllOUI2, class = "OUI")
 xyplot(lift2, auto.key = list(columns = 3))
+
+predProbsAllOUI2Ordered <-   predProbsAllOUI2[order(predProbsAllOUI2$Final, decreasing = T),]
+nrow(predProbsAllOUI2Ordered)
+
+predProbsAllOUI2Ordered$decile  <-  dplyr::ntile(predProbsAllOUI2Ordered$Final,10)
+table(predProbsAllOUI2Ordered$Class, predProbsAllOUI2Ordered$decile)
+
+predProbsAllOUI2Ordered$Meandecile  <-  dplyr::ntile(predProbsAllOUI2Ordered$Mean,10)
+table(predProbsAllOUI2Ordered$Class, predProbsAllOUI2Ordered$Meandecile)
+
+
 
 # ***************************************************************************
 # ***************************************************************************
