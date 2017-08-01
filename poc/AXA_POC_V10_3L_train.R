@@ -716,7 +716,6 @@ pred_DNN <- predsProbList$DNN$prediction
 pred_KNN <- predsProbList$KNN$prediction
 
 perf_svm <- prediction(predictions=as.numeric(pred_svm), labels = as.numeric(y))
-perf_svm <- prediction(predictions=as.numeric(pred_svm), labels = as.numeric(y))
 roc_svm <- performance(perf_svm, measure="tpr", x.measure="fpr")
 
 #install.packages('lift')
