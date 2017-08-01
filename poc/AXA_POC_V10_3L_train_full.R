@@ -1,5 +1,5 @@
 
-list.of.packages <- c( "lubridate","ggplot2","MASS","dplyr","e1071","ROSE","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest", "lift", "plotROC")
+list.of.packages <- c( "lubridate","ggplot2","MASS","dplyr","e1071","ROSE","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest", "lift", "plotROC", "compare")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -29,6 +29,7 @@ library(fpc)
 library(missForest)
 #install.packages('mlbench')
 library(mlbench)
+library(compare)
 
 # ***************************************************************************
 #                   LOAD DATA  ----
@@ -478,10 +479,10 @@ dummyFy <- function(inDF) {
   names(xtrain_dummy)[names(xtrain_dummy) == 'phone_number_usedAXA et CEDRICOM'] <- 'phone_number_usedAXA_et_CEDRICOM'
   names(xtrain_dummy)[names(xtrain_dummy) == 'other_phone_fiabilitynon trouve'] <- 'other_phone_fiabilitynon_trouve'
   
-    #xtrain_dummy[is.na(xtrain_dummy),]
-#table(xtrain_dummy$k,Train_campaign_result$campaign_result )
+  #xtrain_dummy[is.na(xtrain_dummy),]
+  #table(xtrain_dummy$k,Train_campaign_result$campaign_result )
   return(xtrain_dummy)
-  }
+}
 
 #xtrain.pca <- prcomp(xtrain, center = F, scale. = F) 
 #plot(xtrain_dummy.pca, type = "l")
@@ -503,13 +504,13 @@ DFAnalize_campaign_resultBal[which(is.na(DFAnalize_campaign_resultBal)),]
 
 
 # Subsampling Techniques 
-#Train_campaign_result <- ROSE(campaign_result ~ ., data = DFAnalize_campaign_resultBal, seed = 123, N=5000)$data
-Train_campaign_result <- ROSE(campaign_result ~ ., data = DFAnalize_campaign_resultBal, seed = 123)$data
-TrainTest <- SamplTrainTest(DFAnalize_campaign_resultBal, perc=0.80)
-TrainTest <- SamplTrainTest(Train_campaign_result, perc=0.80)
-Train_campaign_result <- data.frame(TrainTest[1])
-Test_campaign_result <- data.frame(TrainTest[2])
-
+#Train_campaign_result <- ROSE(campaign_result ~ ., data = DFAnalize_campaign_resultBal, seed = 123)$data
+Train_campaign_result <- DFAnalize_campaign_resultBal
+#TrainTest <- SamplTrainTest(DFAnalize_campaign_resultBal, perc=0.80)
+#TrainTest <- SamplTrainTest(Train_campaign_result, perc=0.80)
+#Train_campaign_result <- data.frame(TrainTest[1])
+#Test_campaign_result <- data.frame(TrainTest[2])
+Test_campaign_result <- Train_campaign_result
 #Test_campaign_result_ID <- Test_campaign_result$INDICE
 #Train_campaign_result_ID <- Train_campaign_result$INDICE
 #Train_campaign_result <- subset(Train_campaign_result, select = -c(INDICE))
@@ -642,10 +643,9 @@ PredictModelProb <-  function (x,testData,y) {
     pred_Prob = pred_Prob,
     confusionMatrix = cf
   )
-
+  
   return(me) 
 }
-
 
 predsProbList <-  sapply(ModelList, PredictModelProb, simplify = F, testData=x_dummy, y=y )
 trainProbList <-  sapply(ModelList, PredictModelProb, simplify = F, testData=xtrain_dummy, y=ytrain )
@@ -682,11 +682,11 @@ diffOUINON <- function(x) {
   x$DiffKNN = x$KNNOUI-x$KNNNON
   
   x2 <- subset( x, select = -c(svmNON, svmOUI, svmOUI, c5OUI, LBNON, LBOUI,RFNON, RFOUI, gbmNON, gbmOUI, DNNNON, DNNOUI, KNNNON, KNNOUI ) )
-   return(x2)
+  return(x2)
 }
 
 #trainProbsAll <- diffOUINON(trainProbsAll)
-                             
+
 #xpredProbsAll <- merge(trainProbsAll, xtrain_dummy, by=0, all = T)
 #xpredProbsAll <- subset(trainProbsAll, select = -c(LBNON, LBOUI))
 xpredProbsAll <- subset(trainProbsAll)
@@ -697,9 +697,9 @@ stack_models_rf <- train(x = xpredProbsAll, y=ytrain, trControl=fitControl, meth
 stack_models_KNN <- train(x = xpredProbsAll,y=ytrain, trControl=fitControl, method='knn', metric="Accuracy" )
 
 stack_models_svm  <- svm(x = xpredProbsAll, y=ytrain, kernel="polynomial", 
-                   cost=2,
-                   gamma=0.5, 
-                   probability=T, scale = T )
+                         cost=2,
+                         gamma=0.5, 
+                         probability=T, scale = T )
 
 
 pred_prob_svm <- as.data.frame(attr(predsProbList$SVM$pred_Prob, "probabilities"))
@@ -731,10 +731,10 @@ PlotMyROC <-  function(prediction, aname, colrs, y ) {
   perf_ <- prediction(predictions=as.numeric(as.factor(prediction)), labels = as.numeric(as.factor(y)))
   roc_ <- performance(perf_, measure="tpr", x.measure="fpr")
   plot( roc(as.numeric(prediction), as.numeric(y), levels = c(1, 2)) ,
-            main=  paste(aname," ROC chart"), 
-            xlab="1 - Specificity: False Positive Rate",
-            ylab="Sensitivity Rate",
-            col=colrs
+        main=  paste(aname," ROC chart"), 
+        xlab="1 - Specificity: False Positive Rate",
+        ylab="Sensitivity Rate",
+        col=colrs
   )  
 }
 
@@ -764,34 +764,34 @@ preds <- cbind(SVM = PerfMyROCList$SVM@predictions[[1]],
 )
 
 labels <- cbind(SVM = PerfMyROCList$SVM@labels[[1]], 
-               C5 = PerfMyROCList$C5@labels[[1]], 
-               LB = PerfMyROCList$LB@labels[[1]], 
-               RF = PerfMyROCList$RF@labels[[1]], 
-               DNN = PerfMyROCList$DNN@labels[[1]], 
-               KNN = PerfMyROCList$KNN@labels[[1]], 
-               GBM = PerfMyROCList$GBM@labels[[1]]
+                C5 = PerfMyROCList$C5@labels[[1]], 
+                LB = PerfMyROCList$LB@labels[[1]], 
+                RF = PerfMyROCList$RF@labels[[1]], 
+                DNN = PerfMyROCList$DNN@labels[[1]], 
+                KNN = PerfMyROCList$KNN@labels[[1]], 
+                GBM = PerfMyROCList$GBM@labels[[1]]
 )
 
 predsDF <- data.frame(SVM = PerfMyROCList$SVM@predictions[[1]], 
-               C5 = PerfMyROCList$C5@predictions[[1]], 
-               LB = PerfMyROCList$LB@predictions[[1]], 
-               RF = PerfMyROCList$RF@predictions[[1]], 
-               GBM = PerfMyROCList$GBM@predictions[[1]],
-               DNN = PerfMyROCList$DNN@predictions[[1]], 
-               KNN = PerfMyROCList$KNN@predictions[[1]], 
-               LSVM = PerfMyROCList$SVM@labels[[1]], 
-              LC5 = PerfMyROCList$C5@labels[[1]], 
-              LLB = PerfMyROCList$LB@labels[[1]], 
-              LRF = PerfMyROCList$RF@labels[[1]], 
-              LDNN = PerfMyROCList$DNN@labels[[1]], 
-              LKNN = PerfMyROCList$KNN@labels[[1]], 
-              LGBM = PerfMyROCList$GBM@labels[[1]]
+                      C5 = PerfMyROCList$C5@predictions[[1]], 
+                      LB = PerfMyROCList$LB@predictions[[1]], 
+                      RF = PerfMyROCList$RF@predictions[[1]], 
+                      GBM = PerfMyROCList$GBM@predictions[[1]],
+                      DNN = PerfMyROCList$DNN@predictions[[1]], 
+                      KNN = PerfMyROCList$KNN@predictions[[1]], 
+                      LSVM = PerfMyROCList$SVM@labels[[1]], 
+                      LC5 = PerfMyROCList$C5@labels[[1]], 
+                      LLB = PerfMyROCList$LB@labels[[1]], 
+                      LRF = PerfMyROCList$RF@labels[[1]], 
+                      LDNN = PerfMyROCList$DNN@labels[[1]], 
+                      LKNN = PerfMyROCList$KNN@labels[[1]], 
+                      LGBM = PerfMyROCList$GBM@labels[[1]]
 )
 
 
 pred.mat <- prediction(preds, labels = matrix(labels, nrow = nrow((labels)), ncol = ncol(labels)) )
 
-  
+
 ggplot() + 
   geom_roc(data=predsDF, aes(d= LSVM , m = SVM, color="roc SVM")) + 
   geom_roc(data = predsDF, aes(d= LLB , m = LB, color="roc LB") ) +
@@ -801,7 +801,7 @@ ggplot() +
   geom_roc(data = predsDF, aes(d= LDNN , m = DNN, color="roc DNN") ) +
   geom_roc(data = predsDF, aes(d= LDNN , m = DNN, color="roc KNN") ) +
   scale_color_manual(values=c("roc SVM"="red", "roc C5"="blue",  "roc LB" = "darkgoldenrod", "roc RF" = "yellow" , "roc GBM" = "greenyellow", "roc DNN" = "brown", "roc KNN" = "black"), 
-     name="color legend", guide="legend") + 
+                     name="color legend", guide="legend") + 
   style_roc()
 
 #--- Plot Lift 
@@ -841,7 +841,7 @@ ensembleModelList <- list(LB=stack_models_LogitBoost,
                           RF=stack_models_rf, 
                           GBM=stack_model_gbm,
                           KNN=stack_models_KNN
-                          )
+)
 
 ensemblePred <- sapply(ensembleModelList, PredictModelProb, simplify = F, testData=predProbsAll, y=y )
 ensemblePredTrain <- sapply(ensembleModelList, PredictModelProb, simplify = F, testData=trainProbsAll, y=ytrain )
@@ -857,21 +857,21 @@ mapply(PlotMyLIFT, prediction = epreds, aname = names(epreds), MoreArgs =  list(
 enPerfMyROCList <-  mapply(PerfMyROC, prediction = epreds, aname = names(epreds), MoreArgs = list(y=y),  SIMPLIFY = FALSE)
 
 enpredsDF <- data.frame(C5 = as.numeric(enPerfMyROCList$C5@predictions[[1]]), 
-                      LB = as.numeric(enPerfMyROCList$LB@predictions[[1]]), 
-                      RF = as.numeric(enPerfMyROCList$RF@predictions[[1]]), 
-                      GBM = as.numeric(enPerfMyROCList$GBM@predictions[[1]]),
-                      KNN = as.numeric(enPerfMyROCList$KNN@predictions[[1]]),
-                      y = enPerfMyROCList$RF@labels[[1]]
+                        LB = as.numeric(enPerfMyROCList$LB@predictions[[1]]), 
+                        RF = as.numeric(enPerfMyROCList$RF@predictions[[1]]), 
+                        GBM = as.numeric(enPerfMyROCList$GBM@predictions[[1]]),
+                        KNN = as.numeric(enPerfMyROCList$KNN@predictions[[1]]),
+                        y = enPerfMyROCList$RF@labels[[1]]
 )
 
 
 enPerfMyROCListTrain <-  mapply(PerfMyROC, prediction = epredsTrain, aname = names(epreds), MoreArgs = list(y=y),  SIMPLIFY = FALSE)
 enTrainsDF <- data.frame(C5 = as.numeric(enPerfMyROCListTrain$C5@predictions[[1]]), 
-                        LB = as.numeric(enPerfMyROCListTrain$LB@predictions[[1]]), 
-                        RF = as.numeric(enPerfMyROCListTrain$RF@predictions[[1]]), 
-                        GBM = as.numeric(enPerfMyROCListTrain$GBM@predictions[[1]]),
-                        KNN = as.numeric(enPerfMyROCListTrain$KNN@predictions[[1]]),
-                        y = enPerfMyROCListTrain$RF@labels[[1]]
+                         LB = as.numeric(enPerfMyROCListTrain$LB@predictions[[1]]), 
+                         RF = as.numeric(enPerfMyROCListTrain$RF@predictions[[1]]), 
+                         GBM = as.numeric(enPerfMyROCListTrain$GBM@predictions[[1]]),
+                         KNN = as.numeric(enPerfMyROCListTrain$KNN@predictions[[1]]),
+                         y = enPerfMyROCListTrain$RF@labels[[1]]
 )
 
 str(enpredsDF)
@@ -946,6 +946,11 @@ predProbsAllOUI$stack_LogitBoost_OUI  <- ensemblePred$LB$pred_Prob$OUI
 predProbsAllOUI$stack_c5_OUI <- ensemblePred$C5$pred_Prob$OUI
 predProbsAllOUI$stack_rf_OUI <- ensemblePred$RF$pred_Prob$OUI
 predProbsAllOUI$stack_KNN_OUI <- ensemblePred$KNN$pred_Prob$OUI
+
+comparison <- compare(trainProbsAllOUI,predProbsAllOUI,allowAll=TRUE)
+#comparison$tM
+head(trainProbsAllOUI)
+head(predProbsAllOUI)
 
 #pred_prob_stack_svm <- as.data.frame(attr(ensemblePred$SVM$pred_Prob, "probabilities"))
 #predProbsAllOUI$stack_svm_OUI <- pred_prob_stack_svm$OUI
@@ -1199,7 +1204,7 @@ table(predProbsAllOUI2OrderedDiff$Class, predProbsAllOUI2OrderedDiff$Diffecile)
 RtestProbsAllOUI3RD_NB <- data.frame(Max = trainProbsAllOUI2$Final, Mean = trainProbsAllOUI2$Mean, MeanMax = trainProbsAllOUI2$NewFinal)
 #RtestProbsAllOUI3RD_NB$Class <- ytrain
 
-NB3RD_Model <- train(x = RtrainProbsAllOUI3RD_NB,y=y, trControl=fitControl, method='nb', metric="Accuracy" )
+NB3RD_Model <- train( x = subset(RtrainProbsAllOUI3RD_NB, select=-c(Class)), y = y, trControl=fitControl, method='nb', metric="Accuracy" )
 pred_NB3RD  <- predict(object = NB3RD_Model, RtestProbsAllOUI3RD_NB )
 pred_Prob_NB3RD <- predict(NB3RD_Model, RtestProbsAllOUI3RD_NB, type = "prob" , probability = TRUE  )
 table(ytrain, pred_NB3RD)
@@ -1209,11 +1214,18 @@ NB3RDdf_Mean <- data.frame(NB = (pred_Prob_NB3RD$OUI - pred_Prob_NB3RD$NON)  ,
                            Mean = trainProbsAllOUI2$Mean, 
                            MeanMax = trainProbsAllOUI2$NewFinal, 
                            ytrain 
-                           )
+)
 
 NB3RDdf_Mean$NBDiff <- (NB3RDdf_Mean$NB - min(NB3RDdf_Mean$NB) ) / (max(NB3RDdf_Mean$NB) - min(NB3RDdf_Mean$NB))
 NB3RDdf_Mean$TotMean <- (NB3RDdf_Mean$NBDiff+NB3RDdf_Mean$Mean+NB3RDdf_Mean$MeanMax)/3
 
+RtrainProbsAllOUI3RD_NB_view <- RtrainProbsAllOUI3RD_NB
+RtrainProbsAllOUI3RD_NB_view$y <- y
+predProbsAllOUI2_view <- predProbsAllOUI2
+predProbsAllOUI2_view$y <- y
+
+View(RtrainProbsAllOUI3RD_NB_view)
+View(predProbsAllOUI2_view)
 # ***************************************************************************
 # ***************************************************************************
 # ***************************************************************************
@@ -1339,13 +1351,13 @@ ggplot(ScoreconclusionDFGeomMean, aes(Score, y=Percent)) + geom_line(stat = "ide
 
 if(F) {
   
-plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
-
-plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
+  plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
+  plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
+  plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
+  
+  plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
+  plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
+  plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
 }
 
 lift2 <- lift( Class ~ Final+Mean+Geom, data = predProbsAllOUI_NON2, class = "OUI")

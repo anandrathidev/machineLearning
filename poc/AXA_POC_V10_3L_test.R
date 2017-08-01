@@ -99,6 +99,9 @@ dummyFyTest <- function(inDF) {
   xtrain$doc_weeks  <-  mytrans(scale(as.numeric(xtrain$doc_weeks)))
   xtrain$city_population <-  mytrans(scale(xtrain$city_population))
   xtrain$insurance_contrat_value <-  mytrans(scale(xtrain$insurance_contrat_value))
+  xtrain$LastNameLen <-  mytrans(scale(xtrain$LastNameLen))
+  xtrain$adressLen <-  mytrans(scale(xtrain$adressLen))
+  
   #xtrain$age_when_sign <- log(xtrain$age_when_sign)
   #previous_na_action <- options('na.action')
   #options(na.action='na.pass')
@@ -112,10 +115,8 @@ dummyFyTest <- function(inDF) {
   #xtrain_dummy$k <- as.factor(xtrain_dummy$k)
   #xtrain_dummy <- as.data.frame( model.matrix( ~. , xtrain_dummy))
   #xtrain_dummy <- subset(xtrain_dummy, select=-`(Intercept)`)
-  #colnames(xtrain_dummy)[5] <- "phone_number_usedAXA_et_CEDRICOM"
   names(xtrain_dummy)[names(xtrain_dummy) == 'phone_number_usedAXA et CEDRICOM'] <- 'phone_number_usedAXA_et_CEDRICOM'
   names(xtrain_dummy)[names(xtrain_dummy) == 'other_phone_fiabilitynon trouve'] <- 'other_phone_fiabilitynon_trouve'
-  #colnames(xtrain_dummy)[8] <- "other_phone_fiabilitynon_trouve"
   #xtrain_dummy[is.na(xtrain_dummy),]
 #table(xtrain_dummy$k,Train_campaign_result$campaign_result )
   return(xtrain_dummy)
@@ -231,34 +232,21 @@ FinalensemblePred <- sapply(FinalensembleModelList, FinalTestPredictModelProb, s
 Finalepreds <- sapply(X = FinalensemblePred, FUN = function(x ) {x$prediction}, simplify = F, USE.NAMES = T  )
 
 
-enPerfMyROCList <-  mapply(PerfMyROC, prediction = epreds, aname = names(epreds), MoreArgs = list(y=y),  SIMPLIFY = FALSE)
-
-
-
-predProbsAllNON <- subset(FinalpredProbsAll, select = c(  svmNON, c5NON, LBNON, RFNON, gbmNON, KNNNON, DNNNON)) 
-predProbsAllNON$stack_gbm_NON <- ensemblePred$GBM$pred_Prob$NON
-predProbsAllNON$stack_LogitBoost_NON  <- ensemblePred$LB$pred_Prob$NON
-predProbsAllNON$stack_c5_NON <- ensemblePred$C5$pred_Prob$NON
-predProbsAllNON$stack_rf_NON <- ensemblePred$RF$pred_Prob$NON
-predProbsAllNON$stack_KNN_NON <- ensemblePred$KNN$pred_Prob$NON
+FinalpredProbsAllNON <- subset(FinalpredProbsAll, select = c(  svmNON, c5NON, LBNON, RFNON, gbmNON, KNNNON, DNNNON)) 
+FinalpredProbsAllNON$stack_gbm_NON <- FinalensemblePred$GBM$pred_Prob$NON
+FinalpredProbsAllNON$stack_LogitBoost_NON  <- FinalensemblePred$LB$pred_Prob$NON
+FinalpredProbsAllNON$stack_c5_NON <- FinalensemblePred$C5$pred_Prob$NON
+FinalpredProbsAllNON$stack_rf_NON <- FinalensemblePred$RF$pred_Prob$NON
+FinalpredProbsAllNON$stack_KNN_NON <- FinalensemblePred$KNN$pred_Prob$NON
 
 
 ######################
-
-trainProbsAllOUI <- subset(trainProbsAll, select = c(  svmOUI, c5OUI, LBOUI, RFOUI, gbmOUI, KNNOUI, DNNOUI)) 
-trainProbsAllOUI$stack_gbm_OUI <- ensemblePredTrain$GBM$pred_Prob$OUI
-trainProbsAllOUI$stack_LogitBoost_OUI  <- ensemblePredTrain$LB$pred_Prob$OUI
-trainProbsAllOUI$stack_c5_OUI <- ensemblePredTrain$C5$pred_Prob$OUI
-trainProbsAllOUI$stack_rf_OUI <- ensemblePredTrain$RF$pred_Prob$OUI
-trainProbsAllOUI$stack_KNN_OUI <- ensemblePredTrain$KNN$pred_Prob$OUI
-
-
-predProbsAllOUI <- subset(predProbsAll, select = c(  svmOUI, c5OUI, LBOUI, RFOUI, gbmOUI, KNNOUI, DNNOUI)) 
-predProbsAllOUI$stack_gbm_OUI <- ensemblePred$GBM$pred_Prob$OUI
-predProbsAllOUI$stack_LogitBoost_OUI  <- ensemblePred$LB$pred_Prob$OUI
-predProbsAllOUI$stack_c5_OUI <- ensemblePred$C5$pred_Prob$OUI
-predProbsAllOUI$stack_rf_OUI <- ensemblePred$RF$pred_Prob$OUI
-predProbsAllOUI$stack_KNN_OUI <- ensemblePred$KNN$pred_Prob$OUI
+FinalpredProbsAllOUI <- subset(FinalpredProbsAll, select = c(  svmOUI, c5OUI, LBOUI, RFOUI, gbmOUI, KNNOUI, DNNOUI)) 
+FinalpredProbsAllOUI$stack_gbm_OUI <- FinalensemblePred$GBM$pred_Prob$OUI
+FinalpredProbsAllOUI$stack_LogitBoost_OUI  <- FinalensemblePred$LB$pred_Prob$OUI
+FinalpredProbsAllOUI$stack_c5_OUI <- FinalensemblePred$C5$pred_Prob$OUI
+FinalpredProbsAllOUI$stack_rf_OUI <- FinalensemblePred$RF$pred_Prob$OUI
+FinalpredProbsAllOUI$stack_KNN_OUI <- FinalensemblePred$KNN$pred_Prob$OUI
 
 #pred_prob_stack_svm <- as.data.frame(attr(ensemblePred$SVM$pred_Prob, "probabilities"))
 #predProbsAllOUI$stack_svm_OUI <- pred_prob_stack_svm$OUI
@@ -274,386 +262,60 @@ gm_mean = function(x, na.rm=TRUE){
   exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
 }
 
-
-
 #-- Find the maximum of probablity NON
-predProbsAllNON2 <- predProbsAllNON
-predProbsAllNON2$Mean <- apply(predProbsAllNON, 1, mean)
-predProbsAllNON2$Geom <- apply(predProbsAllNON, 1, gm_mean)
+FinalpredProbsAllNON2 <- FinalpredProbsAllNON
+FinalpredProbsAllNON2$Mean <- apply(FinalpredProbsAllNON, 1, mean)
 
 
 #-- Find the maximum of probablity 
-predProbsAllOUI2 <- predProbsAllOUI
-predProbsAllOUI2$Final <- apply(predProbsAllOUI, 1, max)
-predProbsAllOUI2$Mean <- apply(predProbsAllOUI, 1, mean)
-predProbsAllOUI2$Geom <- apply(predProbsAllOUI, 1, gm_mean)
-
-predProbsAllOUI2$Diff <- (predProbsAllOUI2$Mean- predProbsAllNON2$Mean)
-predProbsAllOUI2$NewFinal <- predProbsAllOUI2$Final +  predProbsAllOUI2$Diff
-predProbsAllOUI2$NewFinal <- (predProbsAllOUI2$NewFinal - min(predProbsAllOUI2$NewFinal)) / (max(predProbsAllOUI2$NewFinal)- min(predProbsAllOUI2$NewFinal)) 
-predProbsAllOUI2$NewFinal <- (predProbsAllOUI2$Final + predProbsAllOUI2$NewFinal)/2
-
-
-trainProbsAllNON2 <- trainProbsAllNON
-trainProbsAllNON2$Mean <- apply(trainProbsAllNON, 1, mean)
-trainProbsAllNON2$Geom <- apply(trainProbsAllNON, 1, gm_mean)
-
-trainProbsAllOUI2 <- trainProbsAllOUI
-trainProbsAllOUI2$Final <- apply(trainProbsAllOUI, 1, max)
-trainProbsAllOUI2$Mean <- apply(trainProbsAllOUI, 1, mean)
-trainProbsAllOUI2$Geom <- apply(trainProbsAllOUI, 1, gm_mean)
-
-trainProbsAllOUI2$Diff <- (trainProbsAllOUI2$Mean- trainProbsAllNON2$Mean)
-trainProbsAllOUI2$NewFinal <- trainProbsAllOUI2$Final +  trainProbsAllOUI2$Diff
-trainProbsAllOUI2$NewFinal <- (trainProbsAllOUI2$NewFinal - min(trainProbsAllOUI2$NewFinal)) / (max(trainProbsAllOUI2$NewFinal)- min(trainProbsAllOUI2$NewFinal)) 
-trainProbsAllOUI2$NewFinal <- (trainProbsAllOUI2$Final + trainProbsAllOUI2$NewFinal)/2
-
-RtrainProbsAllOUI3RD_NB <- data.frame(Max = predProbsAllOUI2$NewFinal, Mean = predProbsAllOUI2$Mean, MeanMax = predProbsAllOUI2$NewFina)
-RtrainProbsAllOUI3RD_NB$Class <- y
-
-RtestProbsAllOUI3RD_NB <- data.frame(Max = trainProbsAllOUI2$NewFinal, Mean = trainProbsAllOUI2$Mean, MeanMax = trainProbsAllOUI2$NewFina)
-RtestProbsAllOUI3RD_NB$Class <- ytrain
-
-
-
-predProbsAllOUI2$Class <- y
-predProbsAllOUI2 <- as.data.frame( model.matrix( ~. , predProbsAllOUI2))
-predProbsAllOUI2 <- subset(predProbsAllOUI2, select=-`(Intercept)`)
-predProbsAllOUI2$ClassNON <- ifelse(predProbsAllOUI2$ClassOUI==0,1,0)
-predProbsAllOUI2$Class <- y
-
-predProbsAllOUI2TOTAL <-  nrow(predProbsAllOUI2)
-
-# for cumsum Final
-predProbsAllOUI2 <- predProbsAllOUI2[order(predProbsAllOUI2$Final, decreasing = F),]
-predProbsAllOUI2$OUISum  <- cumsum(predProbsAllOUI2$ClassOUI)
-predProbsAllOUI2$NONSum  <- cumsum(predProbsAllOUI2$ClassNON)
-predProbsAllOUI2$Percent <- predProbsAllOUI2$OUISum/ predProbsAllOUI2$NONSum
-
-# for cumsum mean 
-predProbsAllOUI2 <- predProbsAllOUI2[order(predProbsAllOUI2$Mean, decreasing = F),]
-predProbsAllOUI2$OUISumMean  <- cumsum(predProbsAllOUI2$ClassOUI)
-predProbsAllOUI2$NONSumMean  <- cumsum(predProbsAllOUI2$ClassNON)
-predProbsAllOUI2$PercentMean <- predProbsAllOUI2$OUISumMean/ (predProbsAllOUI2$OUISumMean+predProbsAllOUI2$NONSumMean)
-
-# for cumsum NewFinal
-predProbsAllOUI2 <- predProbsAllOUI2[order(predProbsAllOUI2$NewFinal, decreasing = F),]
-predProbsAllOUI2$OUISumNF  <- cumsum(predProbsAllOUI2$ClassOUI)
-predProbsAllOUI2$NONSumNF  <- cumsum(predProbsAllOUI2$ClassNON)
-predProbsAllOUI2$PercentNF <- predProbsAllOUI2$OUISumNF/ (predProbsAllOUI2$OUISumNF+predProbsAllOUI2$NONSumNF)
-
-
-#predProbsAllOUI2$ID <- Test_campaign_result_ID
-
-
-pseq <- seq(from = 0, to = 1, by = 0.1)
-
-
-aggDiffFUN <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, NewFinal>=n, select =  Class )))
-  ct <- cast(ct, ~Var1, value = 'Freq')
-  (ct$OUI*100)/max(ct$NON + ct$OUI,1)
-}
-
-
-aggFUN <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Final>=n, select =  Class )))
-  ct <- cast(ct, ~Var1, value = 'Freq')
-  (ct$OUI*100)/max(ct$NON + ct$OUI,1)
-}
-
-aggFUNMean <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Mean>=n, select =  Class )))
-  ct<- cast(ct, ~Var1, value = 'Freq')
-  (ct$OUI*100) /max(ct$NON + ct$OUI,1)
-}
-
-aggFUNGeom <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Geom>=n, select =  Class )))
-  ct<- cast(ct, ~Var1, value = 'Freq')
-  (ct$OUI*100) /max(ct$NON + ct$OUI,1)
-}
-
-
-StraggDiffFUN <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, NewFinal>=n, select =  Class )))
-  ct <- cast(ct, ~Var1, value = 'Freq')
-  return (paste0( " ( OUI:", (ct$OUI), ")/(TOTAL:" , max(ct$NON + ct$OUI,1) , ")"  ))
-}
-
-
-StraggFUN <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Final>=n, select =  Class )))
-  ct <- cast(ct, ~Var1, value = 'Freq')
-  return (paste0( " ( OUI:", (ct$OUI), ")/(TOTAL:" , max(ct$NON + ct$OUI,1) , ")"  ))
-}
-
-StraggFUNMean <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Mean>=n, select =  Class )))
-  ct<- cast(ct, ~Var1, value = 'Freq')
-  #(ct$OUI*100) /max(ct$NON + ct$OUI,1)
-  return (paste0( " ( OUI:", (ct$OUI), ")/(TOTAL:" , max(ct$NON + ct$OUI,1) , ")"  ))
-}
-
-StraggFUNGeom <- function(n) { 
-  ct <- as.data.frame(table(subset(predProbsAllOUI2, Geom>=n, select =  Class )))
-  ct<- cast(ct, ~Var1, value = 'Freq')
-  #(ct$OUI*100) /max(ct$NON + ct$OUI,1)
-  return (paste0( " ( OUI:", (ct$OUI), ")/(TOTAL:" , max(ct$NON + ct$OUI,1) , ")"  ))
-}
-
-scoreratioMax <- sapply(pseq, FUN=aggFUN)
-scoreratioDiffMax <- sapply(pseq, FUN=aggDiffFUN)
-scoreratioMean <- sapply(pseq, FUN=aggFUNMean)
-scoreratioGeomMean <- sapply(pseq, FUN=aggFUNGeom)
-
-StrscoreratioMax <- sapply(pseq, FUN=StraggFUN)
-StrscoreratioDiffMax  <- sapply(pseq, FUN=StraggDiffFUN)
-StrscoreratioMean <- sapply(pseq, FUN=StraggFUNMean)
-StrscoreratioGeomMean <- sapply(pseq, FUN=StraggFUNGeom)
-
-ScoreconclusionDF <- data.frame(Score=pseq, Percent=scoreratioMax, Ratio= StrscoreratioMax)
-ScoreconclusionDF$Diff  <- scoreratioDiffMax
-ScoreconclusionDF$PercentMean  <- scoreratioMean
-ScoreconclusionDF$RatioMean  <- StrscoreratioMean
-ScoreconclusionDF$PercentGeomMean  <- scoreratioGeomMean
-ScoreconclusionDF$RatioGeomMean  <- StrscoreratioGeomMean
-ScoreconclusionDF$PercentDiff  <- StrscoreratioDiffMax
-
-
-ggplot(ScoreconclusionDF ) + 
-  geom_line(aes(Score, y=Percent), stat = "identity", color="blue" ) +
-  geom_line(aes(Score, y=PercentMean), stat = "identity", color="darkgoldenrod") +
-  geom_line(aes(Score, y=PercentGeomMean), stat = "identity", color="black") +
-  geom_line(aes(Score, y=Diff), stat = "identity", color="red") +
-  scale_color_manual(values=c("Max"="blue",  "Mean" = "darkgoldenrod", "GeomMean" = "black" ), 
-                     name="Score Vs % \n color legend", guide="legend") + 
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score   ") + ggtitle(" Score Vs Percentage " )
-
-ggplot(ScoreconclusionDF )  + 
-  geom_line(aes(Score, y=Percent), stat = "identity", color="blue") +
-  geom_line(aes(Score, y=PercentMean), stat = "identity", color="darkgoldenrod") +
-  geom_line(aes(Score, y=PercentGeomMean), stat = "identity", color="black") +
-  scale_color_manual(values=c("Max"="blue",  "Mean" = "darkgoldenrod", "GeomMean" = "yellow" ), 
-                     name="Score Vs % \n color legend", guide="legend") + 
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score   ") + ggtitle(" Score Vs Probablity " )
-
-
-
-
-
-################################ above 0.75
-pseq75 <- seq(from = 0, to = 1, by = 0.001)
-
-scoreratioMax <- sapply(pseq75, FUN=aggFUN)
-scoreratioMean <- sapply(pseq75, FUN=aggFUNMean)
-scoreratioGeomMean <- sapply(pseq75, FUN=aggFUNGeom)
-scoreratioDiffMax <- sapply(pseq75, FUN=aggDiffFUN)
-
-
-StrscoreratioMax <- sapply(pseq75, FUN=StraggFUN)
-StrscoreratioMean <- sapply(pseq75, FUN=StraggFUNMean)
-StrscoreratioGeomMean <- sapply(pseq75, FUN=StraggFUNGeom)
-StrscoreratioDiffMax <- sapply(pseq75, FUN=StraggDiffFUN)
-
-ScoreconclusionDFMax <- data.frame(Score=pseq75, Percent=scoreratioMax, Ratio= StrscoreratioMax)
-ScoreconclusionDFMean <- data.frame(Score=pseq75, Percent=scoreratioMean, Ratio= StrscoreratioMean)
-ScoreconclusionDFDiffMax <- data.frame(Score=pseq75, Percent=scoreratioDiffMax, Ratio= StrscoreratioDiffMax)
-ScoreconclusionDFMean <- subset(ScoreconclusionDFMean,ScoreconclusionDFMean$Percent>0 )
-#scoreratioMean <- scoreratioMean[-11] 
-ScoreconclusionDFGeomMean <- data.frame(Score=pseq75, Percent=scoreratioGeomMean, Ratio= StrscoreratioGeomMean, diff=ScoreconclusionDFDiffMax)
-
-ggplot(ScoreconclusionDFMax, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score   ") + ggtitle(" Score Vs Probablity[Max of all] " )
-
-ggplot(ScoreconclusionDFMean, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score  ") + ggtitle(" Score Vs Probablity[Mean of all] " )
-
-ggplot(ScoreconclusionDFGeomMean, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score  ") + ggtitle(" Score Vs Probablity[Geometric Mean of all] " )
-
-ggplot(ScoreconclusionDFDiffMax, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score  ") + ggtitle(" Score Vs Probablity[Diff of all] " )
-
-
-plotLift(predicted = predProbsAllOUI2$Final, predProbsAllOUI2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI2$Mean, predProbsAllOUI2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI2$Geom, predProbsAllOUI2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
-plotLift(predicted = predProbsAllOUI2$Diff, predProbsAllOUI2$ClassOUI, main= "Diff Probabity - Lift", n.buckets = 10 )
-
-
-lift2 <- lift( Class ~ Final+Mean+Geom+Diff, data = predProbsAllOUI2, class = "OUI")
-lift2 <- lift( Class ~ Diff, data = predProbsAllOUI2, class = "OUI")
-xyplot(lift2, auto.key = list(columns = 4)  )
-
-predProbsAllOUI2Ordered <-   predProbsAllOUI2[order(predProbsAllOUI2$Final, decreasing = T),]
-nrow(predProbsAllOUI2Ordered)
-
-predProbsAllOUI2Ordered$decile  <-  dplyr::ntile(predProbsAllOUI2Ordered$Final,10)
-table(predProbsAllOUI2Ordered$Class, predProbsAllOUI2Ordered$decile)
-
-predProbsAllOUI2OrderedMean <-   predProbsAllOUI2[order(predProbsAllOUI2$Mean, decreasing = T),]
-predProbsAllOUI2OrderedMean$Meandecile  <-  dplyr::ntile(predProbsAllOUI2OrderedMean$Mean,10)
-table(predProbsAllOUI2OrderedMean$Class, predProbsAllOUI2OrderedMean$Meandecile)
-
-predProbsAllOUI2OrderedDiff <-   predProbsAllOUI2[order(predProbsAllOUI2$Diff, decreasing = T),]
-predProbsAllOUI2OrderedDiff$Diffecile  <-  dplyr::ntile(predProbsAllOUI2OrderedDiff$Diff,10)
-table(predProbsAllOUI2OrderedDiff$Class, predProbsAllOUI2OrderedDiff$Diffecile)
-
-
-predProbsAllOUI2OrderedDiff <-   predProbsAllOUI2[order( predProbsAllOUI2Ordered$Final+ predProbsAllOUI2$Diff , decreasing = T),]
-predProbsAllOUI2OrderedDiff$Diffecile  <-  dplyr::ntile(predProbsAllOUI2OrderedDiff$Diff,10)
-table(predProbsAllOUI2OrderedDiff$Class, predProbsAllOUI2OrderedDiff$Diffecile)
-
-
-RtrainProbsAllOUI3RD_NB <- data.frame(Max = predProbsAllOUI2$NewFinal, Mean = predProbsAllOUI2$Mean, MeanMax = predProbsAllOUI2$NewFina)
-#RtrainProbsAllOUI3RD_NB$Class <- y
-
-RtestProbsAllOUI3RD_NB <- data.frame(Max = trainProbsAllOUI2$NewFinal, Mean = trainProbsAllOUI2$Mean, MeanMax = trainProbsAllOUI2$NewFina)
-#RtestProbsAllOUI3RD_NB$Class <- ytrain
-
-NB3RD_Model <- train(x = RtrainProbsAllOUI3RD_NB,y=y, trControl=fitControl, method='nb', metric="Accuracy" )
-pred_NB3RD  <- predict(object = NB3RD_Model, RtestProbsAllOUI3RD_NB )
-pred_Prob_NB3RD <- predict(NB3RD_Model, RtestProbsAllOUI3RD_NB, type = "prob" , probability = TRUE  )
-table(ytrain, pred_NB3RD)
-cf_NB3RD <- confusionMatrix(data = ytrain, pred_NB3RD, positive = levels(pred_NB3RD)[2])
-
-
-
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-#                   EVALUATE MODELS   ---- OUI - NON 
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-# ***************************************************************************
-
-# ***************************************************************************
-#   Train model
-# ***************************************************************************
-
-
-trainProbsAllOUI_NON <- subset(xpredProbsAll, select = c(  svmOUI , c5OUI, LBOUI, RFOUI, gbmOUI)) 
-
-trainProbsAllOUI_NON$svmOUI_svmNON  <- xpredProbsAll$svmOUI - xpredProbsAll$svmNON
-trainProbsAllOUI_NON$c5OUI_c5NON  <- xpredProbsAll$c5OUI - xpredProbsAll$c5NON
-trainProbsAllOUI_NON$LBOUI_LBNON  <- xpredProbsAll$LBOUI - xpredProbsAll$LBNON
-trainProbsAllOUI_NON$RFOUI_RFNON  <- xpredProbsAll$RFOUI - xpredProbsAll$RFNON
-trainProbsAllOUI_NON$gbmOUI_gbmNON  <- xpredProbsAll$gbmNON - xpredProbsAll$gbmNON
-
-
-trainProbsAllOUI_NON$stack_gbm_OUI <- ensemblePredTrain$GBM$pred_Prob$OUI
-trainProbsAllOUI_NON$stack_LogitBoost_OUI  <- ensemblePredTrain$LB$pred_Prob$OUI
-trainProbsAllOUI_NON$stack_c5_OUI <- ensemblePredTrain$C5$pred_Prob$OUI
-trainProbsAllOUI_NON$stack_rf_OUI <- ensemblePredTrain$RF$pred_Prob$OUI
-trainProbsAllOUI_NON$stack_svm_OUI <- ensemblePredTrain$SVM$pred_Prob$OUI
-
-trainProbsAllOUI_NON$stack_gbm_OUI_NON <- ensemblePredTrain$GBM$pred_Prob$OUI - ensemblePredTrain$GBM$pred_Prob$NON
-trainProbsAllOUI_NON$stack_LogitBoost_OUI_NON  <- ensemblePredTrain$LB$pred_Prob$OUI  - ensemblePredTrain$LB$pred_Prob$NON
-trainProbsAllOUI_NON$stack_c5_OUI_NON <- ensemblePredTrain$C5$pred_Prob$OUI - ensemblePredTrain$C5$pred_Prob$NON
-trainProbsAllOUI_NON$stack_rf_OUI_NON <- ensemblePredTrain$RF$pred_Prob$OUI - ensemblePredTrain$RF$pred_Prob$NON
-trainProbsAllOUI_NON$stack_svm_OUI_NON <- ensemblePredTrain$SVM$pred_Prob$OUI - ensemblePredTrain$SVM$pred_Prob$NON
-
-
-#pred_prob_stack_svm <- as.data.frame(attr(ensemblePred$SVM$pred_Prob, "probabilities"))
-#predProbsAllOUI$stack_svm_OUI <- pred_prob_stack_svm$OUI
-
-
-#-- Find the maximum of probablity 
-
-
-stack_models_svm_3Level  <- svm(x = trainProbsAllOUI_NON2, y=ytrain, kernel="polynomial", 
-                                cost=1,
-                                gamma=0.5, 
-                                probability=T, scale = T )
-
-
-
-
-# ***************************************************************************
-#   Pred model
-# ***************************************************************************
-
-
-predProbsAllOUI_NON <- subset(predProbsAll, select = c(  svmOUI , c5OUI, LBOUI, RFOUI, gbmOUI)) 
-
-predProbsAllOUI_NON$svmOUI_svmNON  <- predProbsAll$svmOUI - predProbsAll$svmNON
-predProbsAllOUI_NON$c5OUI_c5NON  <- predProbsAll$c5OUI - predProbsAll$c5NON
-predProbsAllOUI_NON$LBOUI_LBNON  <- predProbsAll$LBOUI - predProbsAll$LBNON
-predProbsAllOUI_NON$RFOUI_RFNON  <- predProbsAll$RFOUI - predProbsAll$RFNON
-predProbsAllOUI_NON$gbmOUI_gbmNON  <- predProbsAll$gbmNON - predProbsAll$gbmNON
-
-
-predProbsAllOUI_NON$stack_gbm_OUI <- ensemblePred$GBM$pred_Prob$OUI
-predProbsAllOUI_NON$stack_LogitBoost_OUI  <- ensemblePred$LB$pred_Prob$OUI
-predProbsAllOUI_NON$stack_c5_OUI <- ensemblePred$C5$pred_Prob$OUI
-predProbsAllOUI_NON$stack_rf_OUI <- ensemblePred$RF$pred_Prob$OUI
-predProbsAllOUI_NON$stack_svm_OUI <- ensemblePred$SVM$pred_Prob$OUI
-
-predProbsAllOUI_NON$stack_gbm_OUI_NON <- ensemblePred$GBM$pred_Prob$OUI - ensemblePred$GBM$pred_Prob$NON
-predProbsAllOUI_NON$stack_LogitBoost_OUI_NON  <- ensemblePred$LB$pred_Prob$OUI  - ensemblePred$LB$pred_Prob$NON
-predProbsAllOUI_NON$stack_c5_OUI_NON <- ensemblePred$C5$pred_Prob$OUI - ensemblePred$C5$pred_Prob$NON
-predProbsAllOUI_NON$stack_rf_OUI_NON <- ensemblePred$RF$pred_Prob$OUI - ensemblePred$RF$pred_Prob$NON
-predProbsAllOUI_NON$stack_svm_OUI_NON <- ensemblePred$SVM$pred_Prob$OUI - ensemblePred$SVM$pred_Prob$NON
-
-
-
-#pred_prob_stack_svm <- as.data.frame(attr(ensemblePred$SVM$pred_Prob, "probabilities"))
-#predProbsAllOUI$stack_svm_OUI <- pred_prob_stack_svm$OUI
-
-
-
-pred_3dLevel  <- predict(stack_models_svm_3Level, predProbsAllOUI_NON2 )
-pred_Prob3dLevel <- predict(stack_models_svm_3Level, predProbsAllOUI_NON2, type = "prob" , probability = TRUE  )
-table(y, pred_Prob3dLevel)
-cf <- confusionMatrix(data = y, pred_Prob3dLevel, positive = levels(pred_Prob3dLevel)[2])
-cf
-
-
-
-pseq75 <- seq(from = 0, to = 1, by = 0.001)
-
-scoreratioMax <- sapply(pseq75, FUN=aggFUN)
-scoreratioMean <- sapply(pseq75, FUN=aggFUNMean)
-scoreratioMean <- sapply(pseq75, FUN=aggFUNMean)
-
-StrscoreratioMax <- sapply(pseq75, FUN=StraggFUN)
-StrscoreratioMean <- sapply(pseq75, FUN=StraggFUNMean)
-StrscoreratioGeomMean <- sapply(pseq75, FUN=StraggFUNGeom)
-
-ScoreconclusionDFMax <- data.frame(Score=pseq75, Percent=scoreratioMax, Ratio= StrscoreratioMax)
-ScoreconclusionDFMean <- data.frame(Score=pseq75, Percent=scoreratioMean, Ratio= StrscoreratioMean)
-ScoreconclusionDFMean <- subset(ScoreconclusionDFMean,ScoreconclusionDFMean$Percent>0 )
-#scoreratioMean <- scoreratioMean[-11] 
-ScoreconclusionDFGeomMean <- data.frame(Score=pseq75, Percent=scoreratioGeomMean, Ratio= StrscoreratioGeomMean)
-
-ggplot(ScoreconclusionDFMax, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score   ") + ggtitle(" Score Vs Probablity[Max of all] " )
-
-ggplot(ScoreconclusionDFMean, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score  ") + ggtitle(" Score Vs Probablity[Mean of all] " )
-
-ggplot(ScoreconclusionDFGeomMean, aes(Score, y=Percent)) + geom_line(stat = "identity") +
-  xlab("Score") + ylab("Actual Percent of OUI.  >= score  ") + ggtitle(" Score Vs Probablity[Geometric Mean of all] " )
-
-if(F) {
-  
-plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
-
-plotLift(predicted = predProbsAllOUI_NON2$Final, predProbsAllOUI_NON2$ClassOUI, main= "Max Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Mean, predProbsAllOUI_NON2$ClassOUI, main= "Mean Probabity - Lift", n.buckets = 10 , cumulative = T)
-plotLift(predicted = predProbsAllOUI_NON2$Geom, predProbsAllOUI_NON2$ClassOUI, main= "Geometric Mean Probabity - Lift", n.buckets = 10 )
-}
-
-lift2 <- lift( Class ~ Final+Mean+Geom, data = predProbsAllOUI_NON2, class = "OUI")
-xyplot(lift2, auto.key = list(columns = 3))
-
+FinalpredProbsAllOUI2 <- FinalpredProbsAllOUI
+FinalpredProbsAllOUI2$Final <- apply(FinalpredProbsAllOUI, 1, max)
+FinalpredProbsAllOUI2$Mean <- apply(FinalpredProbsAllOUI, 1, mean)
+
+FinalpredProbsAllOUI2$Diff <- (FinalpredProbsAllOUI2$Mean- FinalpredProbsAllNON2$Mean)
+FinalpredProbsAllOUI2$NewFinal <- FinalpredProbsAllOUI2$Final +  FinalpredProbsAllOUI2$Diff
+FinalpredProbsAllOUI2$NewFinal <- (FinalpredProbsAllOUI2$NewFinal - min(FinalpredProbsAllOUI2$NewFinal)) / (max(FinalpredProbsAllOUI2$NewFinal)- min(FinalpredProbsAllOUI2$NewFinal)) 
+FinalpredProbsAllOUI2$NewFinal <- (FinalpredProbsAllOUI2$Final + FinalpredProbsAllOUI2$NewFinal)/2
+
+FinalRtestProbsAllOUI3RD_NB <- data.frame(Max = FinalpredProbsAllOUI2$Final, 
+                                          Mean = FinalpredProbsAllOUI2$Mean, 
+                                          MeanMax = FinalpredProbsAllOUI2$NewFinal)
+
+Finalpred_NB3RD  <- predict(object = NB3RD_Model, FinalRtestProbsAllOUI3RD_NB )
+Finalpred_Prob_NB3RD <- predict(NB3RD_Model, FinalRtestProbsAllOUI3RD_NB, type = "prob" , probability = TRUE  )
+
+FinalScore <- data.frame(NB = (Finalpred_Prob_NB3RD$OUI - Finalpred_Prob_NB3RD$NON)  , 
+                           Mean = FinalpredProbsAllOUI2$Mean, 
+                           MeanMax = FinalpredProbsAllOUI2$NewFinal,
+                           y = Finalpred_NB3RD
+                            
+)
+FinalScore$NBDiff <- (FinalScore$NB - min(FinalScore$NB) ) / (max(FinalScore$NB) - min(FinalScore$NB))
+FinalScore$TotMean <- (FinalScore$NBDiff+FinalScore$Mean+FinalScore$MeanMax)/3
+
+FinalScore_withID <- data.frame(id=id_contrat, FinalScore=round(FinalScore$TotMean, digits = 4) ,  y = FinalScore$y )
+
+write.csv(x = FinalScore_withID, file="C:/Users/rb117/Documents/work/POC_analytics/Data//result_norm.csv", sep = ',')
+#write.csv(x = FinalScore_withID, file="C:/Users/rb117/Documents/work/POC_analytics/Data//result_full.csv", sep = ',')
+FinalScore_withID_full <-  read.csv("C:/Users/rb117/Documents/work/POC_analytics/Data//result_full.csv",  sep = ',')
+FinalScore_withID_norm <-  read.csv("C:/Users/rb117/Documents/work/POC_analytics/Data//result_norm.csv",  sep = ',')
+
+Finalcomparison <- compare(FinalScore_withID_full,FinalScore_withID_norm,allowAll=TRUE)
+Finalcomparisonmerge  <- merge(x=FinalScore_withID_full, y=FinalScore_withID_norm,  by.x = "id", by.y = "id", all.y = F)
+View(Finalcomparisonmerge)
+table(Finalcomparisonmerge$y.x, Finalcomparisonmerge$y.y)
+testdatamart_campaign_result2 <- testdatamart_campaign_result
+testdatamart_campaign_result2$y <- FinalScore_withID$y
+testdatamart_campaign_result2$FinalScore <- FinalScore_withID$FinalScore
+
+install.packages("scatterplot3d")
+#install.packages("plot3D")
+#install.packages("rgl")
+#library(plot3D)
+library(rgl)
+#plot3D::scatter3D( FinalScore ~ insurance_contrat_value|phone_type|gender , data=testdatamart_campaign_result2 )
+#rgl::plot3d( FinalScore ~ insurance_contrat_value , data=testdatamart_campaign_result2 )
+#df <- testdatamart_campaign_result2
+library(scatterplot3d)
+with(testdatamart_campaign_result2,
+       plot3d(FinalScore ~ age_in_weeks, type='h', lwd=10, col=rainbow(3)))
