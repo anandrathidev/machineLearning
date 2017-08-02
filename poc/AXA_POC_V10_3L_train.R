@@ -411,28 +411,165 @@ DFAnalize_campaign_result  <- subset(mergeDF, select = -c(Final_Status, age_in_w
 # ***************************************************************************
 
 #--- calculate probablity for n tries for ANY customer 
+mergeDFCC <- merge(x = datamart_clean, y= campaign_clean, by.x = "INDICE", by.y = "CONTRACT_ID", all.y = F)
+mergeDFCC_SUCCESS <- subset(mergeDFCC, subset = Final_Status=="SUCCESS"  )
+
+View(mergeDFCC_SUCCESS)
+
+PTtdf <- as.data.frame(table(mergeDFCC_SUCCESS$phone_type))
+PTtdf <- reshape::cast(PTtdf, ~Var1, value = 'Freq')
+str(PTtdf)
+
+cellularTotalsubset <- subset(mergeDFCC_SUCCESS, subset = phone_type=="Cellular"  )  
+LandlineTotalsubset <- subset(mergeDFCC_SUCCESS, subset = phone_type=="Landline" )
+
+
+
+cellularTotalUniqCnt <- aggregate( Conv_Duration~INDICE, cellularTotalsubset, FUN = length)
+str(cellularTotalUniqCnt)
+cellularmean <- mean(cellularTotalUniqCnt$Conv_Duration)
+cellularSTD <- sd(cellularTotalUniqCnt$Conv_Duration)
+t.test(cellularTotalUniqCnt$Conv_Duration, conf.level = 0.99, mu = 5.45)
+
+LandlineTotalUniqCnt <- aggregate( Conv_Duration~INDICE, LandlineTotalsubset, FUN = length)
+str(LandlineTotalUniqCnt)
+Landlinemean <- mean(LandlineTotalUniqCnt$Conv_Duration)
+LandlineSTD <- sd(LandlineTotalUniqCnt$Conv_Duration)
+t.test(LandlineTotalUniqCnt$Conv_Duration, conf.level = 0.99, mu = 5.45)
+
+plot(density((LandlineTotalUniqCnt$Conv_Duration)))
+plot(density((cellularTotalUniqCnt$Conv_Duration)))
+
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+LandlineModes <- table(LandlineTotalUniqCnt$Conv_Duration)
+cellularModes <- table(cellularTotalUniqCnt$Conv_Duration)
+
+cumsum(cellularModes)/sum(cellularModes)
+cumsum(LandlineModes)/sum(LandlineModes)
+
+###################################################################
+###################################################################
+###################################################################
+mergeDFCC_FAIL <- subset(mergeDFCC, subset = Final_Status=="FAIL"  )
+
+View(mergeDFCC_FAIL)
+
+PTtdf <- as.data.frame(table(mergeDFCC_FAIL$phone_type))
+PTtdf <- reshape::cast(PTtdf, ~Var1, value = 'Freq')
+str(PTtdf)
+
+cellularTotalsubsetFail <- subset(mergeDFCC_FAIL, subset = phone_type=="Cellular"  )  
+LandlineTotalsubsetFail <- subset(mergeDFCC_FAIL, subset = phone_type=="Landline" )
+
+
+
+cellularTotalUniqCntFail <- aggregate( Conv_Duration~INDICE, cellularTotalsubsetFail, FUN = length)
+str(cellularTotalUniqCntFail)
+cellularmeanFail <- mean(cellularTotalUniqCntFail$Conv_Duration)
+cellularSTDFail <- sd(cellularTotalUniqCntFail$Conv_Duration)
+t.test(cellularTotalUniqCntFail$Conv_Duration, conf.level = 0.99, mu = 5.45)
+
+LandlineTotalUniqCntFail <- aggregate( Conv_Duration~INDICE, LandlineTotalsubsetFail, FUN = length)
+str(LandlineTotalUniqCntFail)
+Landlinemean <- mean(LandlineTotalUniqCntFail$Conv_Duration)
+LandlineSTD <- sd(LandlineTotalUniqCntFail$Conv_Duration)
+t.test(LandlineTotalUniqCntFail$Conv_Duration, conf.level = 0.99, mu = 5.45)
+
+plot(density((LandlineTotalUniqCntFail$Conv_Duration)))
+plot(density((cellularTotalUniqCntFail$Conv_Duration)))
+
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+LandlineModesFail <- table(LandlineTotalUniqCntFail$Conv_Duration)
+cellularModesFail <- table(cellularTotalUniqCntFail$Conv_Duration)
+
+cumsum(cellularModesFail)/sum(cellularModesFail)
+cumsum(LandlineModesFail)/sum(LandlineModesFail)
+
+plot(cumsum(cellularModesFail)/sum(cellularModesFail))
+plot(cumsum(LandlineModesFail)/sum(LandlineModesFail))
+
+
+##################################################################
+LandLineTotal <- PTtdf$Landline
+
+
+
+meancellularCalls <- PTtdf$Cellular_SUCCESS / nrow(cellularTotalUniq)
+prcellularTotal <- nrow(cellularTotalUniqCnt) / (PTtdf$Cellular)
+prLandLineTotal <- nrow(LandlineTotalUniqCnt)  / (PTtdf$Landline)
+
+
 tdf <- as.data.frame(table(campaign_grouped$Final_Status))
+
+View(campaign_grouped)
 tdf <- reshape::cast(tdf, ~Var1, value = 'Freq')
 pnTriesSuccessAll <- (tdf$SUCCESS)/nrow( campaign_clean  )
 NTRY=4
 pnTriesSuccessNtriesAll <- ( factorial(NTRY) / (factorial(NTRY-1)*1) ) * (pnTriesSuccessAll^1) * ((1-pnTriesSuccessAll)^(NTRY-1))
 options("scipen"=100, "digits"=4)
 print(pnTriesSuccessNtriesAll)
+View(tdf)
 
 #--- calculate probablity for n tries for SuccessFul customer 
 tdf <- as.data.frame(table(campaign_grouped$Final_Status))
 tdf <- reshape::cast(tdf, ~Var1, value = 'Freq')
 
-calcBinProbablity <- function(NTRY=4) {
+calcBinProbablity <- function(NTRY, pnTriesSuccess) {
   SUCESS_TRY<-1
-  pnTriesSuccess <- (tdf$SUCCESS)/nrow( subset( campaign_clean, Final_Status=="SUCCESS" )  )
+  #pnTriesSuccess <- (tdf$SUCCESS)/nrow( subset( campaign_clean, Final_Status=="SUCCESS" )  )
   pnTriesSuccessNtries <- ( factorial(NTRY) / (factorial(NTRY-1)* factorial(SUCESS_TRY)  ) ) * (pnTriesSuccess^SUCESS_TRY) * ((1-pnTriesSuccess)^(NTRY-SUCESS_TRY))
   options("scipen"=100, "digits"=4)
-  print(pnTriesSuccessNtries)
   return(pnTriesSuccessNtries)
 }
 
-callProb <- as.data.frame(matrix(lapply(1:20, FUN=calcBinProbablity))) 
+calcBinProbablityCummilative <- function(NTRY, pnTriesSuccess) {
+  SUCESS_TRY<-1
+  #pnTriesSuccess <- (tdf$SUCCESS)/nrow( subset( campaign_clean, Final_Status=="SUCCESS" )  )
+  pnTriesSuccessNtriesCumm <- 0
+  for(ctry in 1:NTRY ) {
+    pnTriesSuccessNtries <- ( factorial(ctry) / (factorial(ctry-1)* factorial(SUCESS_TRY)  ) ) * (pnTriesSuccess^SUCESS_TRY) * ((1-pnTriesSuccess)^(ctry-SUCESS_TRY))
+    pnTriesSuccessNtriesCumm <- pnTriesSuccessNtriesCumm + pnTriesSuccessNtries
+  }
+  options("scipen"=100, "digits"=4)
+  return(pnTriesSuccessNtriesCumm)
+}
+
+calcBinProbablitySTD <- function(NTRY, pnTriesSuccess) {
+  SUCESS_TRY<-1
+  #pnTriesSuccess <- (tdf$SUCCESS)/nrow( subset( campaign_clean, Final_Status=="SUCCESS" )  )
+  pnTriesSuccessNtriesCumm <- 0
+  return(sqrt(NTRY * pnTriesSuccess* (1 - pnTriesSuccess)))
+}
+
+
+
+cellularcallProb <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablity, pnTriesSuccess=prcellularTotal))) 
+cellularcallProbSTD <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablitySTD, pnTriesSuccess=prcellularTotal))) 
+cellularcallProb$trycount <- 1:nrow(cellularcallProb)
+cellularcallProb[ cellularcallProb$V1 == max(cellularcallProb$V1) ,]$trycount
+
+
+landlinecallProb <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablity, pnTriesSuccess=prLandLineTotal))) 
+landlinecallProbSTD <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablitySTD, pnTriesSuccess=prLandLineTotal))) 
+landlinecallProb$trycount <- 1:nrow(landlinecallProb)
+landlinecallProb[ landlinecallProb$V1 == max(landlinecallProb$V1) ,]$trycount
+
+cellularcallProbCumm <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablityCummilative, pnTriesSuccess=prcellularTotal))) 
+cellularcallProbCumm$trycount <- 1:nrow(cellularcallProb)
+landlinecallProbCumm <- as.data.frame(matrix(sapply(1:20, FUN=calcBinProbablityCummilative, pnTriesSuccess=prLandLineTotal))) 
+landlinecallProbCumm$trycount <- 1:nrow(landlinecallProb)
+
+
 callProb$Num_Of_Calls <-  as.numeric(rownames(callProb)) 
 callProb$Probablity_Customer_Answers_Call <- unlist(callProb$V1)
 str(callProb)
@@ -486,7 +623,6 @@ dummyFy <- function(inDF) {
 #xtrain.pca <- prcomp(xtrain, center = F, scale. = F) 
 #plot(xtrain_dummy.pca, type = "l")
 #names(xtrain_dummy.pca)
-
 
 #..... Remove ID column
 sum(is.na(DFAnalize_campaign_result))

@@ -7,7 +7,6 @@ if(length(new.packages)) install.packages(new.packages)
 c( "lubridate","ggplot2","MASS","dplyr","e1071","ROSE","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest")
 
 
-
 #install.packages('missForest')
 
 library(plotROC)
@@ -290,6 +289,7 @@ FinalScore <- data.frame(NB = (Finalpred_Prob_NB3RD$OUI - Finalpred_Prob_NB3RD$N
                            y = Finalpred_NB3RD
                             
 )
+
 FinalScore$NBDiff <- (FinalScore$NB - min(FinalScore$NB) ) / (max(FinalScore$NB) - min(FinalScore$NB))
 FinalScore$TotMean <- (FinalScore$NBDiff+FinalScore$Mean+FinalScore$MeanMax)/3
 
@@ -302,8 +302,35 @@ FinalScore_withID_norm <-  read.csv("C:/Users/rb117/Documents/work/POC_analytics
 
 Finalcomparison <- compare(FinalScore_withID_full,FinalScore_withID_norm,allowAll=TRUE)
 Finalcomparisonmerge  <- merge(x=FinalScore_withID_full, y=FinalScore_withID_norm,  by.x = "id", by.y = "id", all.y = F)
+View(Finalcomparisonmerge_extra)
 View(Finalcomparisonmerge)
 table(Finalcomparisonmerge$y.x, Finalcomparisonmerge$y.y)
+table(Finalcomparisonmerge$y.x)
+table(Finalcomparisonmerge$y.y)
+
+FinalScoreVotes <- data.frame(id = Finalcomparisonmerge$X.x, y=Finalcomparisonmerge$y.y, y2nd_Opinion=Finalcomparisonmerge$y.x, Score= (Finalcomparisonmerge$FinalScore.x + Finalcomparisonmerge$FinalScore.y)/2  ) 
+FinalScoreVotes$Score <- as.double(round((FinalScoreVotes$Score - min(FinalScoreVotes$Score)) / (max(FinalScoreVotes$Score) - min(FinalScoreVotes$Score)),4))
+FinalScoreVotes$Votes <-  apply(FinalScoreVotes, 1, function(x) { 
+  ifelse(x["y"] == "OUI", ifelse(x["Score"] >= 0.5, 2, 1), 0) +  
+    ifelse(x["y2nd_Opinion"] == "OUI", ifelse(x["Score"] >= 0.5, 2, 1), 0) +
+    ifelse(x["y2nd_Opinion"] == "OUI", ifelse(x["Score"] >= 0.5, 2, 1), 0) 
+    
+  })
+
+
+FinalScoreVotes_extra  <- merge(x=FinalScoreVotes, y=subset(testdatamart_init, select=c(id_contrat, phone_type )) ,  by.x = "id", by.y = "id_contrat", all.y = T)
+FinalScoreVotes_extra$LessChanceBeyondCallTry <-  apply(FinalScoreVotes_extra, 1, function(x) { 
+  ifelse(x["phone_type"] == "Cellular", ifelse(x["Votes"] >= 1, 8, 3), 0) + 
+  ifelse(x["phone_type"] == "Landline", ifelse(x["Votes"] >= 1, 7, 3), 0) 
+})
+
+str(FinalScoreVotes)
+
+View(FinalScoreVotes_extra)
+write.csv(x = FinalScoreVotes_extra, file="C:/Users/rb117/Documents/work/POC_analytics/Data//result_FinalScoreVotes.csv", sep = ',')
+
+
+
 testdatamart_campaign_result2 <- testdatamart_campaign_result
 testdatamart_campaign_result2$y <- FinalScore_withID$y
 testdatamart_campaign_result2$FinalScore <- FinalScore_withID$FinalScore
