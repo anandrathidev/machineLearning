@@ -24,9 +24,7 @@ raw_data.describe()
 raw_enquiry.describe()
 raw_account.columns[raw_account.isnull().any()].tolist()
 
-raw_account.dt
-
-view(raw_account)
+#view(raw_account)
 
 row_ids = raw_account[raw_account["opened_dt"] != raw_account["dt_opened"]].index
 erow_ids = raw_account[raw_account["opened_dt"] == raw_account["dt_opened"]].index
@@ -42,7 +40,7 @@ len(raw_account.columns[ pd.isnull(raw_account).sum() > 10 ])
 Nullraw_account= raw_account[raw_account.columns[ pd.isnull(raw_account).sum() > 10 ]]
 Nullraw_account.describe()
 Nullraw_account.columns
-view(Nullraw_account)
+#view(Nullraw_account)
 
 for cols in  raw_account.columns[ pd.isnull(raw_account).sum() > 10 ]:
     raw_account[cols].describe()
@@ -108,7 +106,7 @@ raw_account['opened_dt'].isnull().sum()
 raw_account[['opened_dt']] =  raw_account['opened_dt'].apply( lambda x :  x[0:6] + "-20" + x[:2])
 raw_account['opened_dt'][raw_account['opened_dt'].str.len() > 11]
 raw_account['opened_dt'].head()
-pd.to_datetime(raw_account['opened_dt'],infer_datetime_format=True)
+raw_account['opened_dt'].describe()
 pd.to_datetime(raw_account['opened_dt'], format='%Y%m%d', errors='ignore')
 
 sum(raw_account["typeofcollateral"].isnull() )
@@ -121,4 +119,55 @@ raw_account["typeofcollateral"]  = raw_account["typeofcollateral"].astype('categ
 raw_account["typeofcollateral"].describe()
 # Impute 
 raw_account["typeofcollateral"] 
+
+sum(raw_account["high_credit_amt"].isnull() )
+sum(raw_account["high_credit_amt"]==0 )
+raw_account["high_credit_amt"] 
+raw_account['high_credit_amt'].fillna( 0, inplace=True)
+
+
+sum(raw_account["amt_past_due"].isnull() )
+sum(raw_account["amt_past_due"]==0 )
+sum(raw_account["amt_past_due"]>0 )
+raw_account['amt_past_due'].fillna( 0, inplace=True)
+
+
+sum(raw_account["writtenoffandsettled"].isnull() )
+sum(raw_account["writtenoffandsettled"]==0 )
+sum(raw_account["writtenoffandsettled"]>0 )
+raw_account['writtenoffandsettled'].fillna( 0, inplace=True)
+
+
+sum(raw_account["writtenoffamountprincipal"].isnull() )
+sum(raw_account["writtenoffamountprincipal"]==0 )
+sum(raw_account["writtenoffamountprincipal"]>0 )
+raw_account['writtenoffamountprincipal'].fillna( 0, inplace=True)
+
+sum(raw_account["valueofcollateral"].isnull() )
+sum(raw_account["valueofcollateral"]==0 )
+sum(raw_account["valueofcollateral"]>0 )
+raw_account['valueofcollateral'].fillna( 0, inplace=True)
+
+sum(raw_account["creditlimit"].isnull() )
+sum(raw_account["creditlimit"]==0 )
+sum(raw_account["creditlimit"]>0 )
+raw_account['creditlimit'].fillna( 0, inplace=True)
+
+sum(raw_account["creditlimit"].isnull() )
+sum(raw_account["creditlimit"]==0 )
+sum(raw_account["creditlimit"]>0 )
+raw_account['creditlimit'].fillna( 0, inplace=True)
+
+sum(raw_account["cashlimit"].isnull() )
+sum(raw_account["cashlimit"]==0 )
+sum(raw_account["cashlimit"]>0 )
+raw_account['cashlimit'].fillna( 0, inplace=True)
+
+sum(raw_account["writtenoffamounttotal"].isnull() )
+sum(raw_account["writtenoffamounttotal"]==0 )
+sum(raw_account["writtenoffamounttotal"]>0 )
+raw_account['writtenoffamounttotal'].fillna( 0, inplace=True)
+
+
+
 
