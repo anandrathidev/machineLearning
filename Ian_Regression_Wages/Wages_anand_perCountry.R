@@ -62,18 +62,26 @@ CountryList <- list( "AUS"= AUS, "AUT"=AUT , "CAN"=CAN, "DEU"=DEU, "JPN"=JPN, "K
 corrplot::corrplot(cor(wages_data))
 lapply( seq_along(CountryList), function(x) corrplot::corrplot(cor(CountryList[[x]]))  ) 
 
-createModels  <- function(wages_x) {
+createModels  <- function(wages_x, name) {
   # First Model 
   #wagesModel  <- lm(Wages ~  . + sin(.), wages_x)
+  print( name )
   wagesModel  <- lm(Wages ~  TIME+ CPI + GDP + TT + Unemp +  WorkingPop + sin(TIME), wages_x)
-  
-  print(summary(wagesModel))
-  wagesModel2 <- stepAIC(wagesModel, trace = FALSE)
-  print(summary(wagesModel2))
-  return(wagesModel2$)
+
+  fit <- auto.arima(residuals(wagesModel),stepwise=FALSE, approximation=FALSE) 
+  print(summary(fit))
+  acf(residuals(wagesModel), main=name) 
+  #acf(residuals(arima(residuals(wagesModel),order = c(2,0,2)) ))
+  #acf(residuals(arima(residuals(wagesModel),order = c(2,0,2)) ), type="partial")
+  acf(residuals(wagesModel), type="partial", main=name)
+
+  #print(summary(wagesModel))
+  #wagesModel2 <- stepAIC(wagesModel, trace = FALSE)
+  #print(summary(wagesModel2))
+  return(wagesModel)
 }
 
-modelList <- lapply( seq_along(CountryList), function(x) createModels(CountryList[[x]]))  
+modelList <- lapply( seq_along(CountryList), function(x) createModels(CountryList[[x]], names(CountryList[x])))  
 
 modelList[[1]]
 
