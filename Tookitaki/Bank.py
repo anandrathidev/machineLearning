@@ -150,7 +150,29 @@ raw_account['opened_dt'].fillna(raw_account['dt_opened'] , inplace=True)
 raw_account['opened_dt'].fillna( pd.to_datetime("01-01-1970"), inplace=True)
 raw_account['opened_dt'].isnull().sum()
 raw_account['opened_dt'] = pd.to_datetime(raw_account['opened_dt'])
-raw_account["dt_opened"] - raw_account["opened_dt"] 
+raw_account['dt_opened'] - raw_account["opened_dt"] 
+
+#raw_account['upload_days']  = (pd.to_datetime('today') - raw_account['upload_dt']  ).dt.days
+#raw_account['last_paymt_days'] = (pd.to_datetime('today') - raw_account['last_paymt_dt']  ).dt.days
+#raw_account['closed_days'] = (pd.to_datetime('today') - raw_account['closed_dt']  ).dt.days
+#raw_account['reporting_days'] = (pd.to_datetime('today') - raw_account['reporting_dt']  ).dt.days
+#raw_account['paymt_str_days'] = (pd.to_datetime('today') - raw_account['paymt_str_dt']  ).dt.days
+#raw_account['paymt_end_days'] = (pd.to_datetime('today') - raw_account['paymt_end_dt']  ).dt.days
+#raw_account['days_opened'] = (pd.to_datetime('today') - raw_account['dt_opened']  ).dt.days
+#raw_account['opened_days'] = (pd.to_datetime('today') - raw_account['opened_dt']  ).dt.days
+
+
+raw_account['last_paymt_opened_diff']  = raw_account['last_paymt_dt']  - raw_account['opened_dt'] 
+raw_account['closed_last_paymt_diff']  = raw_account['closed_dt']  - raw_account['last_paymt_dt'] 
+raw_account['closed_open_diff']  = raw_account['closed_dt']  - raw_account['opened_dt'] 
+
+raw_account['closed_dt']  - raw_account['opened_dt'] 
+raw_account['paymt_str_dt'] - raw_account['paymt_end_dt']
+
+raw_account = raw_account.drop(['paymt_end_dt', 'paymt_str_dt', 'closed_dt', 
+                                'last_paymt_dt', 'upload_dt', 'reporting_dt', 
+                                'opened_dt', 'dt_opened'], axis=1)
+
 
 
 sum(raw_account["typeofcollateral"].isnull() )
@@ -279,20 +301,4 @@ raw_account.shape
 
 pd.isnull(raw_data).sum()
 
-
-df = pd.DataFrame({
-   'x': np.random.uniform(1., 168., 12),
-   'y': np.random.uniform(7., 334., 12),
-   'z': np.random.uniform(1.7, 20.7, 12),
-   'month': [5,6,7]*4,
-   'week': [1,2]*6
-   })
-    
-df = pd.DataFrame({
-   'Animal': ['Animal1', 'Animal2', 'Animal3', 'Animal2', 'Animal1',
-   'Animal2', 'Animal3'],
-   'FeedType': ['A', 'B', 'A', 'A', 'B', 'B', 'A'],
-   'Amount': [10, 7, 4, 2, 5, 6, 2],
-   })    
-
-ndf = df.pivot_table(values='Amount', index='Animal', columns='FeedType', aggfunc='sum')    
+raw_enquiry_init.columns
