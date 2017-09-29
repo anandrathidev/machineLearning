@@ -1,0 +1,10 @@
+install.packages("sparklyr")
+install.packages("devtools")
+library(sparklyr)
+library(devtools)
+devtools::install_github("rstudio/sparklyr")
+library(sparklyr)
+spark_install(version = "2.1.0")
+sc <- spark_connect(master = "spark://192.168.1.5:7077", 
+                    config = list(spark.sql.warehouse.dir = "C:/Spark2.1/tmp/hadoop/bin")                    
+                    )
