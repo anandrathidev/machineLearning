@@ -42,9 +42,19 @@ StructField("LateAircraftDelay",IntegerType(),True)])
 df2007 = spark.read.csv("/home/stp/ML/AirData/data/2007.csv", header = True, schema = schema)
 df2008 = spark.read.csv("/home/stp/ML/AirData/data/2008.csv", header = True, schema = schema)
 
+
 ## Inspect data & convert NA 
+
+def chkNA( col):
+ if 'NA' in col or 'na' in col:
+  return True 
+ else: 
+  return False
+
+like_f = UserDefinedFunction(lambda x: chkNA(x), BooleanType())
+
 def countNA(df, group_colname ):
-  nacount = df.where((col(group_colname) == "NA") ).count()
+  nacount = df.filter(like_f(group_colname)).count()
   return group_colname  + " NA count = "  + str(nacount)
   #shcnt.show(shcnt.count(), False)
 
@@ -67,14 +77,14 @@ df2007.select("ArrDelay").distinct().show()
 udf = UserDefinedFunction(lambda x: x.replace("NA","0"), StringType())
 def replaceNA(df, group_colname ):
   # Before 
-  nacount = df.where((col(group_colname) == "NA") ).count()
+  nacount = df.where( col(group_colname).like("%NA%") ).count()
   print( group_colname  + " NA count = "  + str(nacount))
   df = df.withColumn(group_colname, udf(col(group_colname)).cast(StringType()))
   # After
-  nacount = df.where((col(group_colname) == "NA") ).count()
-  print( group_colname  + " NA count = "  + str(nacount))
+  nacount = df.where(col(group_colname).like("%NA%") ).count()
+  print( group_colname  + " NA count = "  + str(nacount) )
   return df
- 
+
 
 df2007 = replaceNA(df2007, group_colname="ArrDelay")
 df2008 = replaceNA(df2008, group_colname="ArrDelay")
@@ -86,8 +96,6 @@ df2007 = replaceNA(df2007, group_colname="WeatherDelay")
 df2008 = replaceNA(df2008, group_colname="WeatherDelay")
 df2007 = replaceNA(df2007, group_colname="NASDelay")
 df2008 = replaceNA(df2008, group_colname="NASDelay")
-
-
 
 udf2 = UserDefinedFunction(lambda x: x, StringType())
 df2007 = df2007.withColumn("ArrDelay", udf2(col("ArrDelay")).cast(IntegerType()))
@@ -101,11 +109,19 @@ df2008 = df2008.withColumn("WeatherDelay", udf2(col("WeatherDelay")).cast(Intege
 df2007 = df2007.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
 df2008 = df2008.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
 
+df2007_clean  = df2007.rdd.toDF()
+df2008_clean  = df2008.rdd.toDF()
+
+df2007_clean.select(col("ArrDelay")).describe().show()
+df2008_clean.select(col("ArrDelay")).describe().show()
+
+df2007_clean.cache()
+df2007_clean.cache()
 
 def showAll(df, group_colname ):
   gallNA = df.groupBy(group_colname)
   shcnt  = gallNA.count()
-  return group_colname  + " NA count = "  + str(shcnt.where((col(group_colname) == "NA") ).count())
+  return group_colname  + " NA count = "  + str(shcnt.where(col(group_colname).like("%NA%") ).count())
   #shcnt.show(shcnt.count(), False)
 
 
@@ -128,11 +144,14 @@ print( showAll(df=df2008, group_colname="WeatherDelay" ))
 df2007.printSchema()
 df2008.printSchema()
 
+
 df2007.count()
 df2008.count()
 
 dfall = df2007.union(df2008)
+dfall.cache()
 dfall.count()
+dfall.select(col("ArrDelay")).describe().show()
 
 dfall.show(2,truncate= True)
 dfall.printSchema()
@@ -166,9 +185,19 @@ garrMonth.agg( mean("ArrDelay").alias('MeanArrDelay') ).orderBy(asc('MeanArrDela
 
 from graphframes import *
 tripVertices = dfall.withColumnRenamed("FlightNum", "id").distinct()
-tripEdges = dfall.select("FlightNum", "ArrDelay", "Origin", "Dest")
-tripEdges = dfall.select(col("FlightNum").alias("FlightNum"), col("ArrDelay").alias("ArrDelay"),
+tripEdges = dfall.select(col("FlightNum").alias("FlightNum"), col("ArrDelay").cast("string").alias("ArrDelay"),
 col("Origin").alias("src"),col("Dest").alias("dst") )
 
+nacount = tripEdges.where( col("ArrDelay").like("%NA%") ).count()
 
 tripGraph = GraphFrame(tripVertices, tripEdges)
+tripGraph.vertices.count()
+tripGraph.edges.count()
+
+tripEdges.where(col('ArrDelay')).like('%NA%').count()
+tripEdges.where(col('FlightNum')).like('%NA%').count()
+tripEdges.where(col('src')).like('%NA%').count()
+tripEdges.where(col('dst')).like('%NA%').count()
+tripEdges.where(col('FlightNum')).like('%NA%').count()
+tripEdges.where(col('FlightNum')).like('%NA%').count()
+
