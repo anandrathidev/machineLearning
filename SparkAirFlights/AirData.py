@@ -2,6 +2,11 @@
 ## Load data 
 
 from pyspark.sql.types import *
+from pyspark.sql.functions import UserDefinedFunction
+from pyspark.sql.functions import *
+from pyspark.sql.functions import col
+
+
 schema = StructType([StructField("Year",IntegerType(),True),
 StructField("Month",IntegerType(),True),
 StructField("DayofMonth",IntegerType(),True),
@@ -37,40 +42,51 @@ df2007 = spark.read.csv("/home/stp/ML/AirData/data/2007.csv", header = True, sch
 df2008 = spark.read.csv("/home/stp/ML/AirData/data/2008.csv", header = True, schema = schema)
 
 ## Inspect data & convert NA 
-df2007.where((col("ArrDelay") == "NA") ).count()
-df2008.where((col("ArrDelay") == "NA") ).count()
-df2007.where((col("DepDelay") == "NA") ).count()
-df2008.where((col("DepDelay") == "NA") ).count()
-df2007.where((col("CarrierDelay") == "NA") ).count()
-df2008.where((col("CarrierDelay") == "NA") ).count()
-df2007.where((col("WeatherDelay") == "NA") ).count()
-df2008.where((col("WeatherDelay") == "NA") ).count()
+def countNA(df, group_colname ):
+  nacount = df.where((col(group_colname) == "NA") ).count()
+  return group_colname  + " NA count = "  + str(nacount)
+  #shcnt.show(shcnt.count(), False)
+
+countNA(df2007, "ArrDelay")
+countNA(df2008, "ArrDelay")
+countNA(df2007, "DepDelay")
+countNA(df2008, "DepDelay")
+countNA(df2007, "CarrierDelay")
+countNA(df2008, "CarrierDelay")
+countNA(df2007, "WeatherDelay")
+countNA(df2008, "WeatherDelay") 
+countNA(df2007, "NASDelay")
+countNA(df2008, "NASDelay")
 
 
 df2007.select("ArrDelay").distinct().show()
 
 
 # The function withColumn is called to add (or replace, if the name exists) a column to the data frame.
-from pyspark.sql.functions import UserDefinedFunction
-from pyspark.sql.functions import *
 udf = UserDefinedFunction(lambda x: x.replace("NA","0"), StringType())
-df2007 = df2007.withColumn("ArrDelay", udf(col("ArrDelay")).cast(StringType()))
-df2008 = df2008.withColumn("ArrDelay", udf(col("ArrDelay")).cast(StringType()))
-df2007 = df2007.withColumn("DepDelay", udf(col("DepDelay")).cast(StringType()))
-df2008 = df2008.withColumn("DepDelay", udf(col("DepDelay")).cast(StringType()))
+def replaceNA(df, group_colname ):
+  # Before 
+  nacount = df.where((col(group_colname) == "NA") ).count()
+  print( group_colname  + " NA count = "  + str(nacount))
+  df = df.withColumn(group_colname, udf(col(group_colname)).cast(StringType()))
+  # After
+  nacount = df.where((col(group_colname) == "NA") ).count()
+  print( group_colname  + " NA count = "  + str(nacount))
+  return df
+ 
 
-df2007 = df2007.withColumn("CarrierDelay", udf(col("CarrierDelay")).cast(StringType()))
-df2008 = df2008.withColumn("CarrierDelay", udf(col("CarrierDelay")).cast(StringType()))
+df2007 = replaceNA(df2007, group_colname="ArrDelay")
+df2008 = replaceNA(df2008, group_colname="ArrDelay")
+df2007 = replaceNA(df2007, group_colname="DepDelay")
+df2008 = replaceNA(df2008, group_colname="DepDelay")
+df2007 = replaceNA(df2007, group_colname="CarrierDelay")
+df2008 = replaceNA(df2008, group_colname="CarrierDelay")
+df2007 = replaceNA(df2007, group_colname="WeatherDelay")
+df2008 = replaceNA(df2008, group_colname="WeatherDelay")
+df2007 = replaceNA(df2007, group_colname="NASDelay")
+df2008 = replaceNA(df2008, group_colname="NASDelay")
 
-df2007 = df2007.withColumn("WeatherDelay", udf(col("WeatherDelay")).cast(StringType()))
-df2008 = df2008.withColumn("WeatherDelay", udf(col("WeatherDelay")).cast(StringType()))
 
-df2007 = df2007.withColumn("NASDelay", udf(col("NASDelay")).cast(StringType()))
-df2008 = df2008.withColumn("NASDelay", udf(col("NASDelay")).cast(StringType()))
-
-
-df2007.where((col("ArrDelay") == "NA") ).count()
-df2008.where((col("ArrDelay") == "NA") ).count()
 
 udf2 = UserDefinedFunction(lambda x: x, StringType())
 df2007 = df2007.withColumn("ArrDelay", udf2(col("ArrDelay")).cast(IntegerType()))
@@ -79,36 +95,34 @@ df2007 = df2007.withColumn("DepDelay", udf2(col("DepDelay")).cast(IntegerType())
 df2008 = df2008.withColumn("DepDelay", udf2(col("DepDelay")).cast(IntegerType()))
 df2007 = df2007.withColumn("CarrierDelay", udf2(col("CarrierDelay")).cast(IntegerType()))
 df2008 = df2008.withColumn("CarrierDelay", udf2(col("CarrierDelay")).cast(IntegerType()))
-df2007 = df2007.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
 df2007 = df2007.withColumn("WeatherDelay", udf2(col("WeatherDelay")).cast(IntegerType()))
 df2008 = df2008.withColumn("WeatherDelay", udf2(col("WeatherDelay")).cast(IntegerType()))
+df2007 = df2007.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
+df2008 = df2008.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
 
 
-gallNA = df2007.groupBy("ArrDelay")
-gallNA.count().alias('NAS').show()
-gallNA = df2008.groupBy("ArrDelay")
-gallNA.count().alias('NAS').show()
+def showAll(df, group_colname ):
+  gallNA = df.groupBy(group_colname)
+  shcnt  = gallNA.count()
+  return group_colname  + " NA count = "  + str(shcnt.where((col(group_colname) == "NA") ).count())
+  #shcnt.show(shcnt.count(), False)
 
-gallNA = df2007.groupBy("DepDelay")
-gallNA.count().alias('NAS').show()
-gallNA = df2008.groupBy("DepDelay")
-gallNA.count().alias('NAS').show()
 
-gallNA = df2007.groupBy("CarrierDelay")
-gallNA.count().alias('NAS').show()
-gallNA = df2008.groupBy("CarrierDelay")
-gallNA.count().alias('NAS').show()
+print( showAll(df=df2007, group_colname="ArrDelay" ))
+print( showAll(df=df2008, group_colname="ArrDelay" ))
 
-gallNA = df2007.groupBy("NASDelay")
-gallNA.count().alias('NAS').show()
-gallNA = df2008.groupBy("NASDelay")
-gallNA.count().alias('NAS').show()
+print( showAll(df=df2007, group_colname="DepDelay" ))
+print( showAll(df=df2008, group_colname="DepDelay" ))
 
-gallNA = df2007.groupBy("WeatherDelay")
-gallNA.count().alias('NAS').show()
-gallNA = df2008.groupBy("WeatherDelay")
-gallNA.count().alias('NAS').show()
+print( showAll(df=df2007, group_colname="CarrierDelay" ))
+print( showAll(df=df2008, group_colname="CarrierDelay" ))
+
+print( showAll(df=df2007, group_colname="NASDelay" ))
+print( showAll(df=df2008, group_colname="NASDelay" ))
+
+print( showAll(df=df2007, group_colname="WeatherDelay" ))
+print( showAll(df=df2008, group_colname="WeatherDelay" ))
+
 
 df2007.printSchema()
 df2008.printSchema()
@@ -123,10 +137,10 @@ dfall.show(2,truncate= True)
 dfall.printSchema()
 dfall.describe().show()
 
-ArrDelay
-DepDelay
-CarrierDelay
-NASDelay
+#ArrDelay
+#DepDelay
+#CarrierDelay
+#NASDelay
 
 from pyspark.sql.functions import  *
 gall = dfall.groupBy("UniqueCarrier")
@@ -149,7 +163,7 @@ garrtime.agg( mean("ArrDelay").alias('MeanArrDelay') ).orderBy(asc('MeanArrDelay
 garrMonth = dfall.groupBy( col("Month").alias("Month") )
 garrMonth.agg( mean("ArrDelay").alias('MeanArrDelay') ).orderBy(asc('MeanArrDelay'), asc('MeanArrDelay')).show()
 
-
+from graphframes import *
 tripVertices = dfall.withColumnRenamed("FlightNum", "id").distinct()
 tripEdges = dfall.select("FlightNum", "ArrDelay", "Origin", "Dest")
 tripGraph = GraphFrame(tripVertices, tripEdges)
