@@ -1,4 +1,5 @@
 
+##/home/stp/spark-2.1.0-bin-hadoop2.7/bin/pyspark --packages graphframes:graphframes:0.5.0-spark2.1-s_2.11 --master local[*]
 ## Load data 
 
 from pyspark.sql.types import *
@@ -166,4 +167,8 @@ garrMonth.agg( mean("ArrDelay").alias('MeanArrDelay') ).orderBy(asc('MeanArrDela
 from graphframes import *
 tripVertices = dfall.withColumnRenamed("FlightNum", "id").distinct()
 tripEdges = dfall.select("FlightNum", "ArrDelay", "Origin", "Dest")
+tripEdges = dfall.select(col("FlightNum").alias("FlightNum"), col("ArrDelay").alias("ArrDelay"),
+col("Origin").alias("src"),col("Dest").alias("dst") )
+
+
 tripGraph = GraphFrame(tripVertices, tripEdges)
