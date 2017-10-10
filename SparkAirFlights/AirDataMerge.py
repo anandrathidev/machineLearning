@@ -38,6 +38,9 @@ StructField("LateAircraftDelay",IntegerType(),True)])
 df2007 = spark.read.csv("/home/stp/ML/AirData/data/2007.csv", header = True, schema = schema)
 df2008 = spark.read.csv("/home/stp/ML/AirData/data/2008.csv", header = True, schema = schema)
 
+dfall = df2007.union(df2008)
+dfall.cache()
+dfall.count()
 
 ## Inspect data & convert NA 
 
@@ -54,23 +57,18 @@ def countNA(df, group_colname ):
   return group_colname  + " NA count = "  + str(nacount)
   #shcnt.show(shcnt.count(), False)
 
-countNA(df2007, "ArrDelay")
-countNA(df2008, "ArrDelay")
-countNA(df2007, "DepDelay")
-countNA(df2008, "DepDelay")
-countNA(df2007, "CarrierDelay")
-countNA(df2008, "CarrierDelay")
-countNA(df2007, "WeatherDelay")
-countNA(df2008, "WeatherDelay") 
-countNA(df2007, "NASDelay")
-countNA(df2008, "NASDelay")
+countNA(dfall, "ArrDelay")
+countNA(dfall, "DepDelay")
+countNA(dfall, "CarrierDelay")
+countNA(dfall, "WeatherDelay")
+countNA(dfall, "NASDelay")
 
-
-df2007.select("ArrDelay").distinct().show()
+dfall.select("ArrDelay").distinct().show()
 
 
 # The function withColumn is called to add (or replace, if the name exists) a column to the data frame.
 udf = UserDefinedFunction(lambda x: x.replace("NA","0"), StringType())
+udf2 = UserDefinedFunction(lambda x: x, StringType())
 def replaceNA(df, group_colname ):
   # Before 
   nacount = df.where( col(group_colname).like("%NA%") ).count()
@@ -79,79 +77,24 @@ def replaceNA(df, group_colname ):
   # After
   nacount = df.where(col(group_colname).like("%NA%") ).count()
   print( group_colname  + " NA count = "  + str(nacount) )
+  df =  df.withColumn(group_colname, udf2(col(group_colname)).cast(IntegerType()))
   return df
 
 
-df2007 = replaceNA(df2007, group_colname="ArrDelay")
-df2008 = replaceNA(df2008, group_colname="ArrDelay")
-df2007 = replaceNA(df2007, group_colname="DepDelay")
-df2008 = replaceNA(df2008, group_colname="DepDelay")
-df2007 = replaceNA(df2007, group_colname="CarrierDelay")
-df2008 = replaceNA(df2008, group_colname="CarrierDelay")
-df2007 = replaceNA(df2007, group_colname="WeatherDelay")
-df2008 = replaceNA(df2008, group_colname="WeatherDelay")
-df2007 = replaceNA(df2007, group_colname="NASDelay")
-df2008 = replaceNA(df2008, group_colname="NASDelay")
+df = replaceNA(dfall, group_colname="ArrDelay")
+df = replaceNA(dfall, group_colname="DepDelay")
+df = replaceNA(dfall, group_colname="CarrierDelay")
+df = replaceNA(dfall, group_colname="WeatherDelay")
+df = replaceNA(dfall, group_colname="NASDelay")
 
-udf2 = UserDefinedFunction(lambda x: x, StringType())
-df2007 = df2007.withColumn("ArrDelay", udf2(col("ArrDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("ArrDelay", udf2(col("ArrDelay")).cast(IntegerType()))
-df2007 = df2007.withColumn("DepDelay", udf2(col("DepDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("DepDelay", udf2(col("DepDelay")).cast(IntegerType()))
-df2007 = df2007.withColumn("CarrierDelay", udf2(col("CarrierDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("CarrierDelay", udf2(col("CarrierDelay")).cast(IntegerType()))
-df2007 = df2007.withColumn("WeatherDelay", udf2(col("WeatherDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("WeatherDelay", udf2(col("WeatherDelay")).cast(IntegerType()))
-df2007 = df2007.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
-df2008 = df2008.withColumn("NASDelay", udf2(col("NASDelay")).cast(IntegerType()))
-
-df2007_clean  = df2007.rdd.toDF()
-df2008_clean  = df2008.rdd.toDF()
-
-df2007_clean.select(col("ArrDelay")).describe().show()
-df2008_clean.select(col("ArrDelay")).describe().show()
-
-df2007_clean.cache()
-df2007_clean.cache()
-
-def showAll(df, group_colname ):
-  gallNA = df.groupBy(group_colname)
-  shcnt  = gallNA.count()
-  return group_colname  + " NA count = "  + str(shcnt.where(col(group_colname).like("%NA%") ).count())
-  #shcnt.show(shcnt.count(), False)
-
-
-print( showAll(df=df2007, group_colname="ArrDelay" ))
-print( showAll(df=df2008, group_colname="ArrDelay" ))
-
-print( showAll(df=df2007, group_colname="DepDelay" ))
-print( showAll(df=df2008, group_colname="DepDelay" ))
-
-print( showAll(df=df2007, group_colname="CarrierDelay" ))
-print( showAll(df=df2008, group_colname="CarrierDelay" ))
-
-print( showAll(df=df2007, group_colname="NASDelay" ))
-print( showAll(df=df2008, group_colname="NASDelay" ))
-
-print( showAll(df=df2007, group_colname="WeatherDelay" ))
-print( showAll(df=df2008, group_colname="WeatherDelay" ))
-
-
-df2007.printSchema()
-df2008.printSchema()
-
-
-df2007.count()
-df2008.count()
-
-dfall = df2007.union(df2008)
+df.select(col("ArrDelay")).describe().show()
+df.select(col("ArrDelay")).describe().show()
+dfall = df.rdd.toDF()
 dfall.cache()
-dfall.count()
-dfall.select(col("ArrDelay")).describe().show()
-
-dfall.show(2,truncate= True)
 dfall.printSchema()
+dfall.count()
 dfall.describe().show()
+dfall.show(2,truncate= True)
 
 #ArrDelay
 #DepDelay
