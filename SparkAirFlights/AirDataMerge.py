@@ -3,17 +3,16 @@ from pyspark.sql.functions import UserDefinedFunction
 from pyspark.sql.functions import *
 from pyspark.sql.functions import col
 
-
 schema = StructType([StructField("Year",IntegerType(),True),
 StructField("Month",IntegerType(),True),
 StructField("DayofMonth",IntegerType(),True),
 StructField("DayOfWeek",IntegerType(),True),
 StructField("DepTime",StringType(),True),
-StructField("CRSDepTime",IntegerType(),True),
+StructField("CRSDepTime",StringType(),True),
 StructField("ArrTime",StringType(),True),
-StructField("CRSArrTime",IntegerType(),True), 
+StructField("CRSArrTime",StringType(),True), 
 StructField("UniqueCarrier",StringType(),True), 
-StructField("FlightNum",IntegerType(),True), 
+StructField("FlightNum",StringType(),True), 
 StructField("TailNum",StringType(),True), 
 StructField("ActualElapsedTime",StringType(),True), 
 StructField("CRSElapsedTime",StringType(),True),
@@ -22,17 +21,17 @@ StructField("ArrDelay",StringType(),True),
 StructField("DepDelay",StringType(),True),
 StructField("Origin",StringType(),True),
 StructField("Dest",StringType(),True),
-StructField("Distance",IntegerType(),True),
-StructField("TaxiIn",IntegerType(),True),
-StructField("TaxiOut",IntegerType(),True),
-StructField("Cancelled",IntegerType(),True),
+StructField("Distance",StringType(),True),
+StructField("TaxiIn",StringType(),True),
+StructField("TaxiOut",StringType(),True),
+StructField("Cancelled",StringType(),True),
 StructField("CancellationCode",StringType(),True),
-StructField("Diverted",IntegerType(),True),
+StructField("Diverted",StringType(),True),
 StructField("CarrierDelay",StringType(),True),
 StructField("WeatherDelay",StringType(),True),
 StructField("NASDelay",StringType(),True),
-StructField("SecurityDelay",IntegerType(),True),
-StructField("LateAircraftDelay",IntegerType(),True)])
+StructField("SecurityDelay",StringType(),True),
+StructField("LateAircraftDelay",StringType(),True)])
 
 
 df2007 = spark.read.csv("/home/stp/ML/AirData/data/2007.csv", header = True, schema = schema)
@@ -42,7 +41,7 @@ dfall = df2007.union(df2008)
 dfall.cache()
 dfall.count()
 
-## Inspect data & convert NA 
+##### Inspect data & convert #####
 
 def chkNA( col):
  if 'NA' in col or 'na' in col:
@@ -63,8 +62,9 @@ countNA(dfall, "CarrierDelay")
 countNA(dfall, "WeatherDelay")
 countNA(dfall, "NASDelay")
 
-dfall.select("ArrDelay").distinct().show()
+#dfall.select("ArrDelay").distinct().show()
 
+##### Change all NA and convert to IntegerType #####
 
 # The function withColumn is called to add (or replace, if the name exists) a column to the data frame.
 udf = UserDefinedFunction(lambda x: x.replace("NA","0"), StringType())
@@ -88,12 +88,6 @@ df = replaceNA(dfall, group_colname="WeatherDelay")
 df = replaceNA(dfall, group_colname="NASDelay")
 
 df.select(col("ArrDelay")).describe().show()
-df.select(col("ArrDelay")).describe().show()
-dfall = df.rdd.toDF()
-dfall.cache()
-dfall.printSchema()
-dfall.count()
-dfall.describe().show()
 dfall.show(2,truncate= True)
 
 #ArrDelay
@@ -124,18 +118,12 @@ garrMonth.agg( mean("ArrDelay").alias('MeanArrDelay') ).orderBy(asc('MeanArrDela
 
 from graphframes import *
 tripVertices = dfall.withColumnRenamed("FlightNum", "id").distinct()
-tripEdges = dfall.select(col("FlightNum").alias("FlightNum"), col("ArrDelay").cast("string").alias("ArrDelay"),
+tripEdges = dfall.select(col("FlightNum").alias("FlightNum"), col("ArrDelay").cast("integer").alias("ArrDelay"),
 col("Origin").alias("src"),col("Dest").alias("dst") )
 
 nacount = tripEdges.where( col("ArrDelay").like("%NA%") ).count()
-
 tripGraph = GraphFrame(tripVertices, tripEdges)
 tripGraph.vertices.count()
 tripGraph.edges.count()
 
-tripEdges.where(col('ArrDelay')).like('%NA%').count()
-tripEdges.where(col('FlightNum')).like('%NA%').count()
-tripEdges.where(col('src')).like('%NA%').count()
-tripEdges.where(col('dst')).like('%NA%').count()
-tripEdges.where(col('FlightNum')).like('%NA%').count()
-tripEdges.where(col('FlightNum')).like('%NA%').count()
+tripGraph.edges.filter("ArrDelay > 0").groupBy("src", "dst").avg("ArrDelay").sort(desc("avg(ArrDelay)"))
