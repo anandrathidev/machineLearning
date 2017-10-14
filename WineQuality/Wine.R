@@ -36,15 +36,56 @@ library(compare)
 # ***************************************************************************
 #                   LOAD DATA  ----
 # ***************************************************************************
-wine_red_init <- read.csv('C:/Users/rb117/Documents/personal/WineQuality/winequality-red.csv',stringsAsFactors = FALSE, sep = ';')
+
+#dpath =  "C:/Users/rb117/Documents/personal/WineQuality/"
+dpath = "D:/Users/anandrathi/Documents/Work/InterView/Wine/"
+
+wine_red_init <- read.csv( paste0(dpath , "winequality-red.csv"),stringsAsFactors = FALSE, sep = ';')
 str(wine_red_init)
-wine_white_init <- read.csv('C:/Users/rb117/Documents/personal/WineQuality/winequality-white.csv',stringsAsFactors = FALSE, sep = ';')
+wine_white_init <- read.csv( paste0(dpath , "winequality-white.csv"),stringsAsFactors = FALSE, sep = ';')
 str(wine_white_init)
 
-wine_red_init$RedWhite <- 1
-wine_white_init $RedWhite <- 2
-# Merge both data 
-wine_all_init <- rbind(wine_red_init, wine_white_init)
-str(wine_all_init)
-set.seed(42)
+wine_red_init$quality <- as.factor(wine_red_init$quality)
+wine_white_init$quality <- as.factor(wine_white_init$quality)
 
+str(wine_red_init$quality)
+str(wine_white_init$quality)
+
+data.frame(table(wine_red_init$quality))
+data.frame(table(wine_white_init$quality))
+
+##-- Categories are un-balanced
+##-- red
+##--  Var1  Freq
+##-- 1    3   10
+##-- 2    4   53
+##-- 3    5  681
+##-- 4    6  638
+##-- 5    7  199
+##-- 6    8   18
+
+##-- White
+##--   Var1 Freq
+##-- 1    3   20
+##-- 2    4  163
+##-- 3    5 1457
+##-- 4    6 2198
+##-- 5    7  880
+##-- 6    8  175
+##-- 7    9    5
+
+
+if(F) {
+  
+  wine_red_init$RedWhite <- 1
+  wine_white_init $RedWhite <- 2
+  
+  # Merge both data 
+  wine_all_init <- rbind(wine_red_init, wine_white_init)
+  str(wine_all_init)
+  set.seed(42)
+
+}
+
+
+## Build Model 
