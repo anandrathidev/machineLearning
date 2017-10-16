@@ -5,12 +5,12 @@
 ##
 
 ## check & Install R packages 
-list.of.packages <- c( "lubridate","ggplot2","MASS","dplyr","e1071","ROSE","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest", "lift", "plotROC", "compare")
+list.of.packages <- c( "lubridate","ggplot2","MASS","dplyr","e1071","DMwR","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest", "lift", "plotROC", "compare")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
 
-c( "lubridate","ggplot2","MASS","dplyr","e1071","ROSE","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest")
+c( "lubridate","ggplot2","MASS","dplyr","e1071","DMwR","caret","caretEnsemble","MLmetrics","pROC","ROCR","reshape","cluster","fpc","missForest")
 #install.packages('missForest')
 library(plotROC)
 library(lubridate)
@@ -18,7 +18,8 @@ library(ggplot2)
 library(MASS)
 library(dplyr)
 library(e1071)
-library(ROSE)
+#library(ROSE)
+library(DMwR)
 
 library(caret)
 library(caretEnsemble)
@@ -51,29 +52,15 @@ wine_white_init$quality <- as.factor(wine_white_init$quality)
 str(wine_red_init$quality)
 str(wine_white_init$quality)
 
-data.frame(table(wine_red_init$quality))
-data.frame(table(wine_white_init$quality))
+summary(wine_red_init$quality)
 
-##-- Categories are un-balanced
-##-- red
-##--  Var1  Freq
-##-- 1    3   10
-##-- 2    4   53
-##-- 3    5  681
-##-- 4    6  638
-##-- 5    7  199
-##-- 6    8   18
+# look into Package ‘unbalanced’
 
-##-- White
-##--   Var1 Freq
-##-- 1    3   20
-##-- 2    4  163
-##-- 3    5 1457
-##-- 4    6 2198
-##-- 5    7  880
-##-- 6    8  175
-##-- 7    9    5
+wine_red_bal <- SMOTE(quality ~ ., wine_red_init, perc.over = 10000, perc.under=500)
+table(wine_red_bal$quality)
 
+wine_red_bal <- ROSE(quality ~ ., data = wine_red_init, seed = 42)$data
+wine_white_bal <- ROSE(quality ~ ., data = wine_white_init, seed = 42)$data
 
 if(F) {
   
@@ -84,7 +71,7 @@ if(F) {
   wine_all_init <- rbind(wine_red_init, wine_white_init)
   str(wine_all_init)
   set.seed(42)
-
+  
 }
 
 
