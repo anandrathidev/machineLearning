@@ -66,6 +66,10 @@ Multiple R-squared:  0.294,	Adjusted R-squared:  0.2926
 F-statistic: 202.5 on 12 and 5836 DF,  p-value: < 2.2e-16
 "
 
+"
+Lets do some exploration, since Rsqr is very low while error is so high 
+to understand the relation between field & quality
+"
 ggplot(data=aggregate(fixed.acidity~quality, wine_all_init, FUN = mean), aes(x=fixed.acidity, y=quality)) +   geom_line() +   geom_point()
 ggplot(data=aggregate(volatile.acidity~quality, wine_all_init, FUN = mean), aes(x=volatile.acidity, y=quality))  +   geom_line() +   geom_point()
 ggplot(data=aggregate(citric.acid~quality, wine_all_init, FUN = mean), aes(x=citric.acid, y=quality)) +   geom_line() +   geom_point() 
@@ -78,6 +82,11 @@ ggplot(data=aggregate(pH~quality, wine_all_init, FUN = mean), aes(x=pH, y=qualit
 ggplot(data=aggregate(sulphates~quality, wine_all_init, FUN = mean), aes(x=sulphates, y=quality)) +   geom_line() +   geom_point()
 ggplot(data=aggregate(alcohol~quality, wine_all_init, FUN = mean), aes(x=alcohol, y=quality)) +   geom_line() +   geom_point()
 ggplot(data=aggregate(red~quality, wine_all_init, FUN = max), aes(x=red, y=quality)) +   geom_line() +   geom_point()
+
+"
+Based on graphs curves, lets create polynomial models  
+to see how does it effect on rsqr & std error 
+"
 
 fit <- lm(quality ~  I(-exp(sulphates)) + poly(sulphates,3) + sin(sulphates) + cos(sulphates) +  
             I(-exp(pH)) + poly(pH,3) + sin(pH) + cos(pH) +
@@ -97,6 +106,12 @@ Residual standard error: 0.7159 on 6447 degrees of freedom
 Multiple R-squared:  0.333,	Adjusted R-squared:  0.3279 
 F-statistic: 65.69 on 49 and 6447 DF,  p-value: < 2.2e-16
 "
+
+"
+So there was an improvement , so lets give now try poly with interaction by taking log on each side
+
+"
+
 
 cnames <- paste(colnames(wine_all_init)[c(1:11)], collapse = ",")
 
