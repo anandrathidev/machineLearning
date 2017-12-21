@@ -43,17 +43,8 @@ Q2
 
 
 vec3 =  np.random.randint(1,11, size=(6, 10))
-def rowGT5(i):
-    """"""
-    r= 1 if i>5  else 0 
-    return (r)
-
-def rowGT5Test(i):
-    """"""
-    r= 1 if i>5  else 0 
-    return (r)
-
-
-vec3_i  = np.apply_along_axis(rowGT5, 1, vec3)
-
+r,c = numpy.where( vec3 > 5 )
+bc  = np.bincount(r)
+ii = np.nonzero(bc)[0]
+list(zip(ii,bc))
 list(map( rowGT5, list(vec3) ))
