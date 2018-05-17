@@ -322,3 +322,11 @@ predictions_prob = clf.predict_proba(X_test)
 print("evaluate ....")
 print_evaluation_scores_multi_class(y_val=y_test, predicted=predictions)
 
+print("confusion matrix ....")
+
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted'], margins=True)
+
+
+
