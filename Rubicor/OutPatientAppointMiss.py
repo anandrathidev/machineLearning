@@ -276,14 +276,12 @@ def FeatureImportance(forest,X, fsize=None):
   
   # Print the feature ranking
   print("Feature ranking:")
-  
-  
   # Plot the feature importances of the forest
   plt.figure()
   plt.title("Feature importances")
   if fsize==None:
     for f in range(X.shape[1]):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+        print("%d. feature %s (%f)" % (f + 1, X.columns[indices[f]]  , importances[indices[f]]))
     plt.bar(range(X.shape[1]), importances[indices],
            color="r", yerr=std[indices], align="center")
     #plt.xticks(range(X.shape[1]), indices)
@@ -291,7 +289,7 @@ def FeatureImportance(forest,X, fsize=None):
     plt.xlim([-1, X.shape[1]])
   else:
     for f in range(fsize):
-        print("%d. feature %d (%f)" % (f + 1, indices[f], importances[indices[f]]))
+        print("%d. feature %s (%f)" % (f + 1, X.columns[indices[f]]  , importances[indices[f]]))
     plt.bar(range(fsize), importances[indices[:fsize]],
            color="r", yerr=std[indices[:fsize]], align="center")
     plt.xticks(range(fsize), X.columns[indices[:fsize]] , rotation=80)
@@ -326,7 +324,9 @@ print("confusion matrix ....")
 
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
-pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted'], margins=True)
+confMatrix = pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted'], margins=True)
+print(confMatrix)
 
-
+confMatrixPercent = pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted']).apply(lambda r: 100.0 * r/r.sum())
+print(confMatrixPercent)
 
