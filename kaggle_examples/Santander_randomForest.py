@@ -31,7 +31,7 @@ except Exception as e:
 
 
 print(list(data.columns))
-print(list(Y.columns))
+#print(list(Y.columns))
 
 #=============================================================================
 # start Feature selection
@@ -49,7 +49,7 @@ from sklearn.decomposition import SparsePCA
 from sklearn import decomposition
 from sklearn import datasets
 
-pca = decomposition.PCA(n_components=3000)
+pca = decomposition.PCA(n_components=3200)
 pca.fit(data)
 X = pca.transform(data)
 X.shape
@@ -146,6 +146,8 @@ finalyrbf_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander//RFrbf_y.c
 
 ypredDFFinal.to_csv(finalyrbf_file)
 
+ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred ))
+
 
 #=============================================================================
 # end RBF
@@ -174,8 +176,16 @@ ytest_RF = RFregr.predict(testdata)
 ytest_XGS = xgb.predict(testdata)
 ytest_RBF = gp.predict(testdata)
 
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF))
+test_result_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/ypredDFFinalDetails.csv"
+ypredDFFinalDetails.to_csv(test_result_file, index=False)
+
+gpFinal = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
+gpFinal.fit(ypredDFFinal, Y)
+ygpTestFinal = gpFinal.predict(ypredDFFinalDetails)
+
 ytestpredDF = pd.DataFrame(testID, columns=["ID"])
-ytestpredDF["target"] = (ytest_RF + ytest_XGS + 2*ytest_RBF)/4
+ytestpredDF["target"] = (ytest_RF + ytest_XGS + 3*ygpTestFinal)/5
 test_result_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/FinalTestResult.csv"
 ytestpredDF.to_csv(test_result_file, index=False)
 
@@ -184,7 +194,7 @@ ytestpredDF.shape
 #=============================================================================
 # start TEST RBF
 #=============================================================================
-
+"""
 ytest_predRFRBF = gp.predict(pd.DataFrame(ytest_pred))
 ytest_predRFRBFDF = pd.DataFrame(testID, columns=["ID"])
 ytest_predRFRBFDF["target"] = ytest_predRFRBF
@@ -195,6 +205,6 @@ ytest_predRFRBFDF.to_csv(test_result_file, index=False)
 
 ytestpredDF.shape
 
-
+"""
 
 
