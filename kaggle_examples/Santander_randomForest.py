@@ -40,18 +40,23 @@ print(list(Y.columns))
 
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.svm import LinearSVC
-from sklearn.feature_selection import SelectFromModel
-from sklearn import preprocessing
-
-X_normalized = preprocessing.normalize(data, norm='l2')
-
+from sklearn.feature_selection import SelectPercentile
+from sklearn.feature_selection import f_regression
 from  sklearn.feature_selection import mutual_info_regression
+from sklearn import preprocessing
+from sklearn.decomposition import SparsePCA
 
-FS = mutual_info_regression(data,Y)
+from sklearn import decomposition
+from sklearn import datasets
 
-model = SelectFromModel(lsvc, prefit=True)
-X_new = model.transform(data)
-X_new.shape
+pca = decomposition.PCA(n_components=3000)
+pca.fit(data)
+X = pca.transform(data)
+X.shape
+
+#X_normalized = preprocessing.normalize(data, norm='l2')
+
+data=X
 
 #=============================================================================
 # end Feature selection
@@ -78,7 +83,7 @@ ypredDF = pd.DataFrame(y_pred , columns=["YHat"])
 
 ypredDF.shape
 
-trainrms = sqrt(mean_squared_error(ypredDF['Y'], ypredDF['YHat']))
+trainrms = sqrt(mean_squared_error(Y, ypredDF['YHat']))
 print("RF : trainrms {}".format(trainrms ) )
 #=============================================================================
 # end RF
@@ -119,23 +124,23 @@ ypredDFXGS.to_csv(yXGS_file)
 # Instanciate a Gaussian Process model
 kernel = C(5.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
 gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=9)
-ygp = gp.fit(ypredDF, Y)
+ygp = gp.fit(data, Y)
 
-ypredDFXGS = pd.DataFrame( [y_xgbpred, y_pred] , columns=["YHatXGS", "YHatRF"])
-
-# Fit to data using Maximum Likelihood Estimation of the parameters
-gp.fit(ypredDF, Y)
 
 # Make the prediction on the meshed x-axis (ask for MSE as well)
-y_RBFpred, sigma = gp.predict(ypredDF, return_std=True)
+y_RBFpred = gp.predict(data)
 
 
 from sklearn.metrics import mean_squared_error
 from math import sqrt
 
 #y_pred = np.around(y_pred, decimals=2)
-ypredDFFinal = pd.DataFrame(y_RBFpred , columns=["YHat"])
-ypredDFFinal["Y"] = Y
+ypredDFFinal = pd.DataFrame( {y_RBFpred, y_xgbpred, y_pred , Y}  , columns=["RBF", "xgb", "RF", "Y"])
+
+ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred , Y=Y))
+
+trainrms = sqrt(mean_squared_error(Y, y_RBFpred))
+print("RBFPCA : trainrms {}".format(trainrms ) )
 
 finalyrbf_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander//RFrbf_y.csv"
 
@@ -161,13 +166,17 @@ try:
   list(testdata.columns)
   testID = testdata["ID"]
   testdata = testdata.drop(columns=['ID'])
+  testdata = pca.transform(testdata)
 except Exception as e:
   print(e)
 
-ytest_pred = RFregr.predict(testdata)
+ytest_RF = RFregr.predict(testdata)
+ytest_XGS = xgb.predict(testdata)
+ytest_RBF = gp.predict(testdata)
+
 ytestpredDF = pd.DataFrame(testID, columns=["ID"])
-ytestpredDF["target"] = ytest_pred
-test_result_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/RFTestResult.csv"
+ytestpredDF["target"] = (ytest_RF + ytest_XGS + 2*ytest_RBF)/4
+test_result_file = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/FinalTestResult.csv"
 ytestpredDF.to_csv(test_result_file, index=False)
 
 ytestpredDF.shape
