@@ -89,6 +89,18 @@ y_Lpred = lreg.predict(data)
 trainrms = sqrt(mean_squared_error(Y, y_Lpred))
 print("LREG : trainrms {}".format(trainrms ) )
 
+
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+
+
+knnreg = KNeighborsRegressor(n_neighbors=2)
+knnreg.fit(data,Y)
+y_KNNpred = knnreg.predict(data)
+trainrms = sqrt(mean_squared_error(Y, y_KNNpred))
+print("KNN PCA : trainrms {}".format(trainrms ) )
+
 #=============================================================================
 # end Feature selection
 #=============================================================================
@@ -218,10 +230,12 @@ print("Predict  xgb...")
 ytest_XGS = xgb.predict(testdata)
 print("Predict  rbf...")
 ytest_RBF = gp.predict(testdata)
+print("Predict  KNN...")
+ytest_KNNpred= knnreg.predict(testdata)
 
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, Target= (1*ytest_RBF + 100*ytest_XGS + ytest_RF)/102  ))
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, Target= (1*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/13  ))
 ypredDFFinalDetails.to_csv(test_result_file1, index=False)
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF))
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN = ytest_KNNpred))
 ypredDFFinalDetails.shape
 
 print("Predict  xgs final ...")
