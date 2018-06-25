@@ -89,17 +89,23 @@ y_Lpred = lreg.predict(data)
 trainrms = sqrt(mean_squared_error(Y, y_Lpred))
 print("LREG : trainrms {}".format(trainrms ) )
 
-
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error
 from math import sqrt
-
 
 knnreg = KNeighborsRegressor(n_neighbors=2)
 knnreg.fit(data,Y)
 y_KNNpred = knnreg.predict(data)
 trainrms = sqrt(mean_squared_error(Y, y_KNNpred))
 print("KNN PCA : trainrms {}".format(trainrms ) )
+
+
+from sklearn.neighbors import RadiusNeighborsRegressor
+radreg  = RadiusNeighborsRegressor(radius=1.0)
+radreg.fit(data, Y) 
+y_radpred = radreg.predict(data)
+trainrms = sqrt(mean_squared_error(Y, y_radpred))
+print("Rad PCA : trainrms {}".format(trainrms ) )
 
 #=============================================================================
 # end Feature selection
@@ -233,9 +239,13 @@ ytest_RBF = gp.predict(testdata)
 print("Predict  KNN...")
 ytest_KNNpred= knnreg.predict(testdata)
 
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, Target= (1*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/13  ))
+print("Predict  Rad Reg...")
+ytest_Radpred= radreg.predict(testdata)
+
+
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, RadReg=ytest_Radpred, Target= (1*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/13  ))
 ypredDFFinalDetails.to_csv(test_result_file1, index=False)
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN = ytest_KNNpred))
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN = ytest_KNNpred, RadReg=ytest_Radpred))
 ypredDFFinalDetails.shape
 
 print("Predict  xgs final ...")
@@ -245,8 +255,8 @@ print("Write test data ...")
 ypredDFFinalDetails["ID"] = testID
 ypredDFFinalDetails["YGP"] = ygpTestFinal
 
-ypredDFFinalDetails["ReTarget"] = np.rint(np.exp( (ytest_RF + ytest_XGS + 3*ygpTestFinal)/5 +1))
-ypredDFFinalDetails["Target"] =  np.rint(np.exp((3*ytest_RBF + 10*ytest_XGS + ytest_RF)/14  +1))
+ypredDFFinalDetails["ReTarget"] = np.rint(np.exp( (ytest_KNNpred + ytest_RF + ytest_XGS + 3*ygpTestFinal)/5 +1))
+ypredDFFinalDetails["Target"] =  np.rint(np.exp((3*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/15  +1))
 
 ypredDFFinalDetails.to_csv(test_result_file2, index=False)
 
