@@ -194,7 +194,7 @@ print("RBFPCA : trainrms {}".format(trainrms ) )
 
 ypredDFFinal.to_csv(finalyrbf_file)
 
-ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred ))
+ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred , KNN=y_KNNpred))
 ypredDFFinal.shape
 
 
@@ -203,14 +203,19 @@ ypredDFFinal.shape
 #=============================================================================
 
 
+
 xgbFinal = xgboost.XGBRegressor(n_estimators=101, learning_rate=0.19, gamma=130, subsample=0.71,
                            colsample_bytree=1, max_depth=15)
 xgbFinal.fit(ypredDFFinal,Y)
 
 YxgbFinal = xgbFinal.predict(ypredDFFinal)
 trainrms = sqrt(mean_squared_error(Y, YxgbFinal))
+
 print("RBFFinal : trainrms {}".format(trainrms ) )
 
+radregF  = RadiusNeighborsRegressor(weights='distance', radius=1.3)
+radregF.fit(ypredDFFinal,Y) 
+y_radFinal = radregF.predict(ypredDFFinal)
 
 #=============================================================================
 # start TEST
@@ -246,13 +251,14 @@ print("Predict  Rad Reg...")
 ytest_Radpred= radreg.predict(testdata)
 
 
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, RadReg=ytest_Radpred, Target= (1*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/13  ))
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, Target= (1*ytest_RBF + 10*ytest_XGS + ytest_RF + ytest_KNNpred)/13  ))
 ypredDFFinalDetails.to_csv(test_result_file1, index=False)
-ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN = ytest_KNNpred, RadReg=ytest_Radpred))
+ypredDFFinalDetails = pd.DataFrame(dict(RBF = ytest_RBF, XGS= ytest_XGS, RF = ytest_RF, KNN = ytest_KNNpred))
 ypredDFFinalDetails.shape
 
 print("Predict  xgs final ...")
 ygpTestFinal = xgbFinal.predict(ypredDFFinalDetails)
+yradTestFinal = radregF.predict(ypredDFFinalDetails)
 
 print("Write test data ...")
 ypredDFFinalDetails["ID"] = testID
