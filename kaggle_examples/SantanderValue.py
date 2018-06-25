@@ -40,10 +40,10 @@ if PrepareData:
     data = None
     Y = None
     try:
-      data = pd.read_csv(data_file)
-      list(data.columns)
-      Y = data["target"]
-      data = data.drop(columns=['ID', 'target'])
+      xdata = pd.read_csv(data_file)
+      list(xdata.columns)
+      Y = xdata["target"]
+      data = xdata.drop(columns=['ID', 'target'])
     except Exception as e:
       print(e)
     
@@ -67,11 +67,13 @@ from sklearn import decomposition
 from sklearn import datasets
 
 
+print("scale...")
 rscaler = RobustScaler()
 rscaler.fit(data)
 data = rscaler.transform(data)
 
-pca = decomposition.PCA(0.94)
+print("PCA...")
+pca = decomposition.PCA(0.91)
 pca.fit(data)
 data = pca.transform(data)
 data.shape
@@ -82,6 +84,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from math import sqrt
 
+print("Lin reg...")
 lreg = LinearRegression()
 lreg.fit(data,Y)
 y_Lpred = lreg.predict(data)
@@ -101,7 +104,7 @@ print("KNN PCA : trainrms {}".format(trainrms ) )
 
 
 from sklearn.neighbors import RadiusNeighborsRegressor
-radreg  = RadiusNeighborsRegressor(radius=1.0)
+radreg  = RadiusNeighborsRegressor(weights='distance', radius=10.3)
 radreg.fit(data, Y) 
 y_radpred = radreg.predict(data)
 trainrms = sqrt(mean_squared_error(Y, y_radpred))
