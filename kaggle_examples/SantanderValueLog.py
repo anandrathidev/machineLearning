@@ -101,8 +101,7 @@ pca = None
 pca = decomposition.PCA(0.90)
 print("PCA...")
 pca.fit(data)
-
-#data = pca.transform(data)
+data = pca.transform(data)
 #outliers = stats.zscore(data['_source.price']).apply(lambda x: np.abs(x) == 3)
 #df_without_outliers = data[~outliers]
 
@@ -232,7 +231,7 @@ ypredDFFinal.to_csv(finalyrbf_file)
 plt.figure(figsize=(8,8))
 plt.scatter( Y, y_pred )
 plt.scatter( Y, y_RBFpred )
-plt.scatter( Y, ypredDFXGS )
+plt.scatter( Y, y_xgbpred )
 plt.scatter( Y, y_KNNpred )
 
 
