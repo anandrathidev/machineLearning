@@ -52,8 +52,20 @@ if PrepareData:
     print(list(data.columns)[0:10])
     #print(list(Y.columns))
 
-    
+from scipy.stats import boxcox
 
+YBC, ylambda = boxcox(Y)
+
+def invboxcox(y,ld):
+   if ld == 0:
+      return(np.exp(y))
+   else:
+      return(np.exp(np.log(ld*y+1)/ld))
+    
+Yt = invboxcox(YBC,ylambda)
+Ydf = pd.DataFrame(dict(Y=Y,Yt=Yt))
+
+Y=YBC
 #=============================================================================
 # start Feature selection
 #=============================================================================
@@ -74,26 +86,25 @@ import seaborn as sns
 
 plt.plot(Y,Y)
 from sklearn import feature_selection
-FSelect = feature_selection.SelectPercentile(f_regression, percentile=35)
+#from sklearn.preprocessing import PowerTransformer
+
+FSelect = feature_selection.SelectPercentile(f_regression, percentile=30)
 FSelect.fit(data, Y)
 rscaler = RobustScaler()
-pca = None
-pca = decomposition.PCA(0.90)
-pca.fit(data)
+#pca = None
+#pca = decomposition.PCA(0.90)
+#pca.fit(data)
 
-def FPrepareData(data):
-    print("Feature selection...")
-    data = FSelect.transform(data)
-    print("scale...")
-    rscaler.fit(data)
-    data = rscaler.transform(data)
-    #data = pca.transform(data)
-    #outliers = stats.zscore(data['_source.price']).apply(lambda x: np.abs(x) == 3)
-    #df_without_outliers = data[~outliers]
-    return data
+print("Feature selection...")
+data = FSelect.transform(data)
+print("scale...")
+rscaler.fit(data)
+data = rscaler.transform(data)
+#data = pca.transform(data)
+#outliers = stats.zscore(data['_source.price']).apply(lambda x: np.abs(x) == 3)
+#df_without_outliers = data[~outliers]
 
-print("Prepare data...")
-data = FPrepareData(data)
+print("PCA...")
 data.shape
 
 #X_normalized = preprocessing.normalize(data, norm='l2')
@@ -193,13 +204,12 @@ ypredDFXGS.to_csv(yXGS_file)
 
 
 # Instanciate a Gaussian Process model
-kernel = C(7.0, (1e-8, 1e8)) * RBF(10, (1e-4, 1e4))
-gp = GaussianProcessRegressor(kernel=None, alpha=0.01,  n_restarts_optimizer=33, normalize_y=True)
+kernel = C(7.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
+gp = GaussianProcessRegressor(kernel=None, alpha=0.0001,  n_restarts_optimizer=33, normalize_y=True)
 ygp = gp.fit(data, Y)
 
 
 # Make the prediction on the meshed x-axis (ask for MSE as well)
-print("gp.predict ...{}".format("" ) )
 y_RBFpred = gp.predict(data)
 
 
@@ -208,14 +218,26 @@ from math import sqrt
 
 #y_pred = np.around(y_pred, decimals=2)
 
-ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred , KNN=y_KNNpred, Y=Y))
+ypredDFFinal =  pd.DataFrame(dict(RBF = y_RBFpred, XGS= y_xgbpred, RF = y_pred , Y=Y))
 
 trainrms = sqrt(mean_squared_error(Y, y_RBFpred))
 print("RBFPCA : trainrms {}".format(trainrms ) )
 
+
 ypredDFFinal.to_csv(finalyrbf_file)
 
 
+plt.figure(figsize=(8,8))
+plt.scatter( Y, y_pred )
+plt.scatter( Y, y_RBFpred )
+plt.scatter( Y, ypredDFXGS )
+plt.scatter( Y, y_KNNpred )
+
+
+plt.xlabel('index', fontsize=12)
+plt.ylabel('Target', fontsize=12)
+plt.title("Target Distribution", fontsize=14)
+plt.show()
 
 #=============================================================================
 # end RBF
@@ -226,8 +248,9 @@ ypredDFFinal =  pd.DataFrame(dict(XGS= y_xgbpred, RF = y_pred , KNN=y_KNNpred))
 ypredDFFinal.shape
 
 
-xgbFinal = xgboost.XGBRegressor(n_estimators=400, learning_rate=0.031, gamma=13, subsample=0.76,
-                           colsample_bytree=1, max_depth=65)
+
+xgbFinal = xgboost.XGBRegressor(n_estimators=201, learning_rate=0.19, gamma=130, subsample=0.71,
+                           colsample_bytree=1, max_depth=15)
 xgbFinal.fit(ypredDFFinal,Y)
 
 YxgbFinal = xgbFinal.predict(ypredDFFinal)
@@ -243,39 +266,84 @@ print("XGSFinal : trainrms {}".format(trainrms ) )
 # start TEST
 #=============================================================================
 
-testdataX=None
-if testdataX is None:
+if PrepareData:
     testdata = None
     Ytest = None
     testID = None
     try:
-      testdataX = pd.read_csv(test_file)
+      testdata = pd.read_csv(test_file)
       print("Test Data Loaded...")
       #list(testdata.columns)
-      testID = testdataX["ID"]
-      testdata = testdataX.drop(columns=['ID'])
-      print("Test Data Fselect...")
-      testdata= FSelect.transform(testdataX)
-      print("Test rscaler...")
+      testID = testdata["ID"]
+      testdata = testdata.drop(columns=['ID'])
+      testdata= FSelect.transform(testdata)
       testdata = rscaler.transform(testdata)
       print("Test Data scaled...")
-      if pca is not None:
-          testdata = pca.transform(testdata)
+      #if pca is not None:
+      #    testdata = pca.transform(testdata)
           
       print("Test Data pca...")
     except Exception as e:
       print(e)
 
 print("Predict  RF...")
-ytest_RF = RFregr.predict(testdata)
+ytest_RF = invboxcox(RFregr.predict(testdata),ylambda)
+
 print("Predict  xgb...")
-ytest_XGS = xgb.predict(testdata)
+ytest_XGS = invboxcox(xgb.predict(testdata),ylambda)
 
 print("Predict  rbf...")
-ytest_RBF = gp.predict(testdata)
+ytest_RBF = invboxcox(gp.predict(testdata),ylambda)
 
 print("Predict  KNN...")
-ytest_KNNpred= knnreg.predict(testdata)
+ytest_KNNpred= invboxcox(knnreg.predict(testdata),ylambda)
+
+plt.figure(figsize=(11,11))
+plt.scatter(y_pred , Y)
+plt.scatter(range(0,len(ytest_XGS)), ytest_XGS, s=100,  marker="s", label='RF-XGS')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_XGS', fontsize=12)
+plt.title("ytest_XGS Distribution", fontsize=14)
+
+plt.scatter(range(0,len(ytest_XGS)), ytest_RBF, s=100,  marker="s", label='ytest_RBF')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_RBF', fontsize=12)
+plt.title("ytest_RBF Distribution", fontsize=14)
+
+plt.scatter(range(0,len(ytest_XGS)), ytest_KNNpred, s=100,  marker="s", label='ytest_KNNpred')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_KNNpred', fontsize=12)
+plt.title("ytest_KNNpred Distribution", fontsize=14)
+
+plt.scatter(range(0,len(ytest_XGS)), ytest_RF, s=100,  marker="s", label='ytest_RF')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_RF', fontsize=12)
+plt.title("ytest_RF Distribution", fontsize=14)
+
+plt.scatter(range(0,len(ytest_XGS)), ygpTestFinal, s=100,  marker="s", label='ygpTestFinal')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_RF', fontsize=12)
+plt.title("ygpTestFinal Distribution", fontsize=14)
+plt.scatter(range(0,len(ytest_XGS)), (ytest_RBF + ytest_KNNpred  + 2*ygpTestFinal)/4, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
+
+
+plt.scatter(ytest_RF, ytest_XGS, s=100,  marker="s", label='RF-XGS')
+plt.scatter(ytest_RF, ytest_RBF, s=100,  marker="s", label='RF-RBF')
+plt.scatter(ytest_XGS, ytest_RBF, s=100,  marker="s", label='XGS-RBF')
+plt.scatter(ytest_XGS, ytest_KNNpred, s=100,  marker="s", label='XGS-KNN')
+plt.scatter(ytest_RBF, ytest_KNNpred, s=100,  marker="s", label='ytest_RBF, ytest_KNNpred ')
+plt.scatter(ytest_RF, ytest_KNNpred, s=100,  marker="s", label='ytest_RF, ytest_KNNpred ')
+
+plt.scatter(ygpTestFinal, ytest_XGS, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
+plt.scatter(ygpTestFinal, ytest_RF, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
+
+
+
+plt.xlabel('index', fontsize=12)
+plt.ylabel('Target', fontsize=12)
+plt.title("Target Distribution", fontsize=14)
+plt.show()
+
 
 ypredDFFinalDetails = pd.DataFrame(dict(XGS= ytest_XGS, RF = ytest_RF, KNN=ytest_KNNpred, RBF=ytest_RBF, Target= ( 2*ytest_XGS + ytest_RF + 2*ytest_KNNpred)/5  ))
 ypredDFFinalDetails.to_csv(test_result_file1, index=False)
@@ -283,15 +351,15 @@ ypredDFFinalDetails = pd.DataFrame(dict( XGS=ytest_XGS, RF = ytest_RF, KNN = yte
 ypredDFFinalDetails.shape
 
 print("Predict  xgs final ...")
-ygpTestFinal = xgbFinal.predict(ypredDFFinalDetails)
+ygpTestFinal = invboxcox(xgbFinal.predict(ypredDFFinalDetails), ylambda)
 #yradTestFinal = radregF.predict(ypredDFFinalDetails)
 
 print("Write test data ...")
 ypredDFFinalDetails["ID"] = testID
 ypredDFFinalDetails["YGP"] = ygpTestFinal
 
-ypredDFFinalDetails["ReTarget"] =  ( 2*ytest_KNNpred + 2*ytest_XGS + 2*ygpTestFinal)/7 
-ypredDFFinalDetails["Target"] =  (ytest_XGS  + ytest_KNNpred)/2  
+ypredDFFinalDetails["ReTarget"] = (ytest_RBF + ytest_KNNpred + ytest_XGS + 2*ygpTestFinal)/5
+ypredDFFinalDetails["Target"] =  (ytest_RBF + ytest_KNNpred + ytest_XGS)/3  
 
 ypredDFFinalDetails.to_csv(test_result_file2, index=False)
 
