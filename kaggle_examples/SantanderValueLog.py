@@ -88,18 +88,20 @@ plt.plot(Y,Y)
 from sklearn import feature_selection
 #from sklearn.preprocessing import PowerTransformer
 
-FSelect = feature_selection.SelectPercentile(f_regression, percentile=30)
-FSelect.fit(data, Y)
-rscaler = RobustScaler()
-#pca = None
-#pca = decomposition.PCA(0.90)
-#pca.fit(data)
-
 print("Feature selection...")
-data = FSelect.transform(data)
+#FSelect = feature_selection.SelectPercentile(f_regression, percentile=30)
+#FSelect.fit(data, Y)
+#data = FSelect.transform(data)
 print("scale...")
+rscaler = RobustScaler()
 rscaler.fit(data)
 data = rscaler.transform(data)
+
+pca = None
+pca = decomposition.PCA(0.90)
+print("PCA...")
+pca.fit(data)
+
 #data = pca.transform(data)
 #outliers = stats.zscore(data['_source.price']).apply(lambda x: np.abs(x) == 3)
 #df_without_outliers = data[~outliers]
@@ -148,7 +150,7 @@ print("Rad PCA : trainrms {}".format(trainrms ) )
 # Instanciate a Gaussian Process model
 #kernel = C(1.0, (1e-3, 1e3)) * RBF(10, (1e-2, 1e2))
 print("RF ...{}".format("" ) )
-RFregr = RandomForestRegressor(n_estimators=301, random_state=0, oob_score=True)
+RFregr = RandomForestRegressor(n_estimators=111, random_state=0, oob_score=True)
 
 # Fit to data using Maximum Likelihood Estimation of the parameters
 RFregr.fit(data, Y)
@@ -176,7 +178,7 @@ print("RFPCA : trainrms {}".format(trainrms ) )
 
 print("XGboost ...{}".format("" ) )
 import xgboost
-xgb = xgboost.XGBRegressor(n_estimators=301, learning_rate=0.59, gamma=5, subsample=0.81,
+xgb = xgboost.XGBRegressor(n_estimators=111, learning_rate=0.59, gamma=5, subsample=0.81,
                            colsample_bytree=1, max_depth=15)
 
 # Fit to data using Maximum Likelihood Estimation of the parameters
@@ -276,13 +278,13 @@ if PrepareData:
       #list(testdata.columns)
       testID = testdata["ID"]
       testdata = testdata.drop(columns=['ID'])
-      testdata= FSelect.transform(testdata)
-      testdata = rscaler.transform(testdata)
+      #testdata= FSelect.transform(testdata)
       print("Test Data scaled...")
-      #if pca is not None:
-      #    testdata = pca.transform(testdata)
-          
+      testdata = rscaler.transform(testdata)
       print("Test Data pca...")
+      if pca is not None:
+          testdata = pca.transform(testdata)
+          
     except Exception as e:
       print(e)
 
@@ -299,32 +301,48 @@ print("Predict  KNN...")
 ytest_KNNpred= invboxcox(knnreg.predict(testdata),ylambda)
 
 plt.figure(figsize=(11,11))
-plt.scatter(y_pred , Y)
 plt.scatter(range(0,len(ytest_XGS)), ytest_XGS, s=100,  marker="s", label='RF-XGS')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_XGS', fontsize=12)
 plt.title("ytest_XGS Distribution", fontsize=14)
+plt.show()
 
+plt.figure(figsize=(11,11))
 plt.scatter(range(0,len(ytest_XGS)), ytest_RBF, s=100,  marker="s", label='ytest_RBF')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_RBF', fontsize=12)
 plt.title("ytest_RBF Distribution", fontsize=14)
+plt.show()
 
+plt.figure(figsize=(11,11))
 plt.scatter(range(0,len(ytest_XGS)), ytest_KNNpred, s=100,  marker="s", label='ytest_KNNpred')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_KNNpred', fontsize=12)
 plt.title("ytest_KNNpred Distribution", fontsize=14)
+plt.show()
 
+plt.figure(figsize=(11,11))
 plt.scatter(range(0,len(ytest_XGS)), ytest_RF, s=100,  marker="s", label='ytest_RF')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_RF', fontsize=12)
 plt.title("ytest_RF Distribution", fontsize=14)
+plt.show()
 
+plt.figure(figsize=(11,11))
 plt.scatter(range(0,len(ytest_XGS)), ygpTestFinal, s=100,  marker="s", label='ygpTestFinal')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_RF', fontsize=12)
 plt.title("ygpTestFinal Distribution", fontsize=14)
+plt.scatter(range(0,len(ytest_XGS)), ygpTestFinal, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
+plt.show()
+
+plt.figure(figsize=(11,11))
+plt.scatter(range(0,len(ytest_XGS)), ygpTestFinal, s=100,  marker="s", label='ygpTestFinal')
+plt.xlabel('index', fontsize=12)
+plt.ylabel('ytest_RF', fontsize=12)
+plt.title("Target Distribution", fontsize=14)
 plt.scatter(range(0,len(ytest_XGS)), (ytest_RBF + ytest_KNNpred  + 2*ygpTestFinal)/4, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
+plt.show()
 
 
 plt.scatter(ytest_RF, ytest_XGS, s=100,  marker="s", label='RF-XGS')
@@ -336,8 +354,6 @@ plt.scatter(ytest_RF, ytest_KNNpred, s=100,  marker="s", label='ytest_RF, ytest_
 
 plt.scatter(ygpTestFinal, ytest_XGS, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
 plt.scatter(ygpTestFinal, ytest_RF, s=100,  marker="s", label='ygpTestFinal, ytest_KNNpred ')
-
-
 
 plt.xlabel('index', fontsize=12)
 plt.ylabel('Target', fontsize=12)
