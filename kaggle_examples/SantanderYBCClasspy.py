@@ -275,18 +275,18 @@ lab_enc = preprocessing.LabelEncoder()
 lab_enc.fit(Y)
 Y_FULL_encoded = lab_enc.transform(Y)
 Y_data_encoded = lab_enc.transform(Y_Cdata)
-Y_test_encoded = lab_enc.transform(y_Ctest)
+Y_test_encoded = lab_enc.transform(Y_Ctest)
 Y_data_encoded.shape
 
 print(utils.multiclass.type_of_target(Y_data_encoded))
 
-lgbmClass1 = lgb.LGBMClassifier(n_estimators=400, objective='multiclassova' )
+lgbmClass1 = lgb.LGBMClassifier(n_estimators=171, objective='multiclassova' )
 
 lgbmClass1.fit(data, Y_FULL_encoded,
         eval_set=[(X_Ctest, Y_test_encoded)],
         early_stopping_rounds=111)
 
-Y_lgbmClass1_encodedPredict = lgbmClass1.predict(X_test)
+Y_lgbmClass1_encodedPredict = lgbmClass1.predict(X_Ctest)
 trainrms = sqrt(mean_squared_error(
    lab_enc.inverse_transform( Y_test_encoded  ),
    lab_enc.inverse_transform( Y_lgbmClass1_encodedPredict)
@@ -298,57 +298,6 @@ print("lgbmClass1  trainrms {}".format(  trainrms ) )
 
 # In[82]:
 
-
-print("Re arget DF ...{}".format("" ) )
-XpredDFFinal =  pd.DataFrame(dict( RF = yRF, lgbm1=y_lgbmx1, lgbm2=y_lgbmx2 ) )
-print(XpredDFFinal.shape)
-
-
-# In[83]:
-
-print("xgbFinal ...{}".format("" ) )
-lgbmFinal = lgb.LGBMRegressor(objective='regression',
-                        num_leaves=9,
-                        learning_rate= 0.05,
-                        feature_fraction= 0.8,
-                        bagging_fraction= 0.8,
-                        bagging_freq= 5,
-                        verbose= 0,
-                        n_estimators=311)
-lgbmFinal.fit(XpredDFFinal, y_test,
-        eval_set=[(X_test, y_test)],
-        eval_metric='l2',
-        early_stopping_rounds=21)
-
-print(X_test.shape)
-print(X_data.shape)
-
-YxgbFinal = lgbmFinal.predict(XpredDFFinal)
-trainrms = sqrt(mean_squared_error(y_test, YxgbFinal))
-print("XGSFinal : trainrms {}".format(trainrms ) )
-plt.figure(figsize=(11,11))
-plt.scatter(y_test, YxgbFinal, s=100,  marker="s", label='YxgbFinal')
-plt.xlabel('index', fontsize=12)
-plt.ylabel('YxgbFinal ', fontsize=12)
-plt.title("Y", fontsize=14)
-plt.show()
-
-
-
-# In[84]:
-
-
-lgbmRF = lgb.LGBMRegressor(objective='regression',
-                        num_leaves=31,
-                        min_data_in_leaf=2,
-                        learning_rate= 0.055,
-                        feature_fraction= 0.91,
-                        bagging_fraction= 0.65,
-                        bagging_freq= 7,
-                        verbose= 0,
-                        n_estimators=1511,
-                        num_threads=3,
-                         boosting="rf")
 
 lgbm2 = lgb.LGBMRegressor(objective='regression',
                         num_leaves=31,
@@ -372,7 +321,6 @@ lgbm1 = lgb.LGBMRegressor(objective='regression',
                         verbose= 0,
                         n_estimators=2511)
 
-lgbmRF.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l2',  early_stopping_rounds=511)
 lgbm2.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l2',  early_stopping_rounds=511)
 lgbm1.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l1',  early_stopping_rounds=511)
 
@@ -380,52 +328,42 @@ lgbm1.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l1',  early_stop
 # In[89]:
 
 
-print("Predict  RF...")
-ytest_RF= invboxcox(lgbmRF.predict(testdataPCA),ylambda)
 print("Predict  lgbm1...")
 ytest_lgbm1= invboxcox(lgbm1.predict(testdataPCA),ylambda)
 print("Predict  lgbm2...")
 ytest_lgbm2= invboxcox(lgbm2.predict(testdataPCA),ylambda)
 
-print("Predict  RFx...")
-ytest_RFx= invboxcox(lgbmRFx.predict(testdataPCA),ylambda)
-print("Predict  lgbmx1...")
 ytest_lgbmx1= invboxcox(lgbmx1.predict(testdataPCA),ylambda)
+
 print("Predict  lgbmx2...")
-ytest_lgbmx2= invboxcox(lgbmx2.predict(testdataPCA),ylambda)
+ytest_lgbmClass1= lgbmClass1.predict(testdata)
 
 
 plt.figure(figsize=(11,11))
-plt.scatter(range(0,len(ytest_lgbm1)), ytest_lgbm1, s=100,  marker="s", label='yxgsTestFinal')
+plt.scatter(range(0,len(ytest_lgbm1)), ytest_lgbm1, s=100,  marker="s", label='ytest_lgbm1')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_lgbm1 ', fontsize=12)
 plt.title("ytest_lgbm1 Distribution", fontsize=14)
 plt.show()
 plt.figure(figsize=(11,11))
-plt.scatter(range(0,len(ytest_lgbm2)), ytest_lgbm2, s=100,  marker="s", label='ytest_lgbm1')
+plt.scatter(range(0,len(ytest_lgbm2)), ytest_lgbmClass1, s=100,  marker="s", label='ytest_lgbmClass1')
 plt.xlabel('index', fontsize=12)
-plt.ylabel('ytest_lgbm2 ', fontsize=12)
-plt.title("ytest_lgbm2 Distribution", fontsize=14)
+plt.ylabel('ytest_lgbmClass1 ', fontsize=12)
+plt.title("ytest_lgbmClass1 Distribution", fontsize=14)
 plt.show()
 
-plt.figure(figsize=(11,11))
-plt.scatter(range(0,len(ytest_RF)), ytest_RF, s=100,  marker="s", label='ytest_lgbm2')
-plt.xlabel('index', fontsize=12)
-plt.ylabel('yRFTestFinal ', fontsize=12)
-plt.title("yRFTestFinal Distribution", fontsize=14)
-plt.show()
 
 plt.figure(figsize=(11,11))
-plt.scatter( ytest_lgbm1 , ytest_RF, s=100,  marker="s", label='lgbm1_RFT ' )
+plt.scatter( ytest_lgbm1 , ytest_lgbmClass1, s=100,  marker="s", label='lgbm1_RFT ' )
 plt.xlabel('ytest_lgbm1', fontsize=12)
-plt.ylabel('ytest_RF ', fontsize=12)
-plt.title("RF lgbm1 Distribution", fontsize=14)
+plt.ylabel('ytest_lgbmClass1 ', fontsize=12)
+plt.title("ytest_lgbmClass1 lgbm1 Distribution", fontsize=14)
 plt.show()
 
 plt.figure(figsize=(11,11))
-plt.scatter( ytest_lgbm1 , ytest_lgbmx2, s=100,  marker="s", label='lgbm2_RFT ' )
+plt.scatter( ytest_lgbm1 , ytest_lgbmx1, s=100,  marker="s", label='lgbm1_lgbmx1' )
 plt.xlabel('ytest_lgbm1', fontsize=12)
-plt.ylabel('ytest_lgbmx2 ', fontsize=12)
+plt.ylabel('ytest_lgbmx1 ', fontsize=12)
 plt.title("RF lgbm2 Distribution", fontsize=14)
 plt.show()
 
@@ -435,12 +373,10 @@ plt.show()
 
 ypredavg = pd.DataFrame(dict(
     XLGB1=ytest_lgbmx1,
-    XLGB2=ytest_lgbmx2,
-    XRF=ytest_RF,
     LGB1=ytest_lgbm1,
     LGB2=ytest_lgbm2,
-    RF=ytest_RFx,
-    AVG= (ytest_RF + ytest_lgbm1 + ytest_lgbm2 + ytest_lgbmx1  )/4  ) )
+    CLASS=ytest_lgbmClass1,
+    AVG= (ytest_lgbmClass1 + ytest_lgbm1 + ytest_lgbm2 + ytest_lgbmx1  )/4  ) )
 
 print(ypredavg.columns)
 ypredavg.to_csv(filepath + "/tmp/FinalFinal.csv", index=False)
