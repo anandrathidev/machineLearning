@@ -97,25 +97,32 @@ print("Drop cols with std ==0 {} {}".format(len(colsToRemove), colsToRemove))
 testdata.drop(colsToRemove, axis=1, inplace=True)
 data.drop(colsToRemove, axis=1, inplace=True)
 
+# In[6]:
 
 print("Feature scaling...")
 fulldata = data.append(testdata)
-fulldataBC = fulldata[:]
-dataBC = data[:]
-testdataBC = testdata[:]
-BCLAMBDA = {}
 rscaler = RobustScaler()
 rscaler.fit( fulldata )
 dataScaled = rscaler.transform( data )
 testdataScaled = rscaler.transform( testdata )
 fulldataScaled = rscaler.transform( fulldata )
+
+
+# In[6]:
 print("Feature normalisation...")
+fulldataBC = pd.DataFrame(fulldataScaled)
+dataBC = pd.DataFrame(dataScaled)
+testdataBC = pd.DataFrame(testdataScaled)
+BCLAMBDA = {}
 for col in range(data.shape[1]):
-    xBC,Xlambda= boxcox( fulldataScaled[: ,[col] ] +1 )
+    xBC,Xlambda= boxcox( fulldataBC[col] +1 )
     BCLAMBDA[col] =  Xlambda
     fulldataBC[col] = xBC
-    dataBC[col] = np.array( boxcox(dataScaled[: ,[col] ]+1 , Xlambda)  )
-    testdataBC[col] = np.array(boxcox(testdataScaled[: ,[col] ]+1,Xlambda))
+    xBC =  boxcox(dataBC[col] +1 , Xlambda)  
+    dataBC[col] = xBC
+    testdataBC[col] = np.array(boxcox(testdataBC[col]+1,Xlambda))
+    xBC =  boxcox(testdataBC[col] +1 , Xlambda)  
+    testdataBC[col] = xBC
 
 print("BOCOX {} {}".format(len(BCLAMBDA), BCLAMBDA))
 
