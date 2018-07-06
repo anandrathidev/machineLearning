@@ -1,10 +1,15 @@
+
+# coding: utf-8
+
+# In[85]:
+
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jul  5 19:07:42 2018
 
 @author: anandrathi
 """
-
 
 # coding: utf-8
 
@@ -29,9 +34,9 @@ np.random.seed(42)
 
 import pandas as pd
 
-filepath = "/home/he159490/DS/Kaggle/SantanderValue//"
-filepath = "F:/DataScience/Kagggle/SantanderValue/"
 filepath = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/"
+filepath = "F:/DataScience/Kagggle/SantanderValue/"
+filepath = "/home/he159490/DS/Kaggle/SantanderValue//"
 
 data_file = filepath + "train.csv"
 y_RF_file = filepath + "/tmp/RF_y.csv"
@@ -73,18 +78,13 @@ testdata = testdata.drop(columns=['ID'])
 
 # In[]:
 from scipy.stats import boxcox
+Y = xdata["target"]
 YBC,ylambda= boxcox(Y)
 #YBC= boxcox(Y)
 plt.figure(figsize=(8,8))
 plt.plot(range(0,len(Y)),np.sort(YBC))
 plt.show()
 print("ylambda =  {}".format(ylambda))
-def invboxcox(y,ld):
-   if ld == 0:
-      return(np.expm1(y))
-   else:
-      return(np.expm1(np.log1p(ld*y+1)/ld))
-
 # In[6]:
 
 print("Feature selection...")
@@ -107,15 +107,78 @@ print("Drop cols with std ==0 {} {}".format(len(colsToRemove), colsToRemove))
 testdata.drop(colsToRemove, axis=1, inplace=True)
 data.drop(colsToRemove, axis=1, inplace=True)
 
+
+# In[86]:
+
+
 # In[6]:
+
+Y = xdata["target"]
+YBC,ylambda= boxcox(Y)
+ylambda=None
+
+if ylambda is None:
+   YBC=Y 
+else:
+   YBC= boxcox(Y,ylambda)
+
+def invboxcox(y,ld):
+   if ld is None:
+      return y 
+   if ld == 0:
+      return(np.expm1(y))
+   else:
+      return(np.expm1(np.log1p(ld*y+1)/ld))
+    
+print(YBC[0:10])    
+
+
+# In[87]:
+
 
 print("Feature scaling...")
 fulldata = data.append(testdata)
-rscaler = RobustScaler()
+#rscaler = RobustScaler()
+rscaler = preprocessing.Normalizer()
 rscaler.fit( fulldata )
 dataScaled = rscaler.transform( data )
 testdataScaled = rscaler.transform( testdata )
 fulldataScaled = rscaler.transform( fulldata )
+#dataScaled = ( data )
+#testdataScaled = ( testdata )
+#fulldataScaled = ( fulldata )
+
+
+# In[88]:
+
+
+"""
+colsToRemove = []
+for col in data.columns:
+  if col != 'ID' and col != 'target':
+    if dataScaled[col].std() == 0  or testdataScaled[col].std() == 0:
+      colsToRemove.append(col)
+    if dataScaled[col].std() == 0:
+      pass  
+      #colsToRemove.append(col)
+
+    #if abs(data[col].std() - testdata[col].std())*100/testdata[col].std()  > 89.0:
+    #  colsToRemove.append(col)
+
+colsToRemove = []
+print("Drop cols with std ==0 {} {}".format(len(colsToRemove), colsToRemove))
+"""
+
+
+# In[89]:
+
+
+# remove constant columns in the test set
+testdataScaled = testdata.drop(colsToRemove, axis=1)
+dataScaled = data.drop(colsToRemove, axis=1)
+
+
+# In[ ]:
 
 
 # In[6]:
@@ -124,8 +187,10 @@ fulldataBC = pd.DataFrame(fulldataScaled)
 dataBC = pd.DataFrame(dataScaled)
 testdataBC = pd.DataFrame(testdataScaled)
 BCLAMBDA = {}
+"""
 for col in range(data.shape[1]):
     xBC,Xlambda= boxcox( fulldataBC[col] +1 )
+    Xlambda=0
     BCLAMBDA[col] =  Xlambda
     fulldataBC[col] = xBC
     xBC =  boxcox(dataBC[col] +1 , Xlambda)
@@ -133,10 +198,9 @@ for col in range(data.shape[1]):
     testdataBC[col] = np.array(boxcox(testdataBC[col]+1,Xlambda))
     xBC =  boxcox(testdataBC[col] +1 , Xlambda)
     testdataBC[col] = xBC
+"""
 
-print("BOCOX {} {}".format(len(BCLAMBDA), BCLAMBDA))
-
-
+#print("BOCOX {} {}".format(len(BCLAMBDA), BCLAMBDA))
 
 # In[7]:
 
@@ -145,7 +209,6 @@ datastd[datastd["std"]==0]
 
 
 # In[7]:
-
 ###########  Scale ###########
 print("scale...")
 #dataScaled = rscaler.transform(dataBC)
@@ -164,14 +227,22 @@ print("Full Data scaled...")
 dataScaledLog = (dataBC)
 testdataScaledLog = (testdataBC)
 fulldataScaledLog = (fulldataBC)
-
 print("Done...")
 # In[8]:
 
+print(fulldataScaledLog[0:10])
+
+
+# In[101]:
+
+
 ###########  PCA ###########
 print("train pca...")
-pca = decomposition.PCA(0.999)
+pca = decomposition.PCA(n_components=0.85, 
+                        copy=True, whiten=False, svd_solver='full', 
+                        tol=0.0 )
 pca = pca.fit(fulldataScaledLog)
+
 fulldataScaledPCA = pca.transform(fulldataScaledLog)
 print("pca transform train... ")
 dataPCA = pca.transform(dataScaledLog)
@@ -179,14 +250,15 @@ print("Test Data pca... ")
 testdataPCA = pca.transform(testdataScaledLog)
 
 
+# In[102]:
+
+
 # In[10]:
 
-Y=YBC
-X_data, X_test, Y_data, y_test = train_test_split(dataPCA, Y, test_size=0.15, random_state=42)
+#Y=YBC
+X_data, X_test, Y_data, y_test = train_test_split(dataPCA, YBC, test_size=0.19, random_state=1)
 print(X_data.shape)
 dataScaledLogPD = pd.DataFrame(dataScaledLog,columns=data.columns)
-#XTrainPD = pd.DataFrame(X_data,columns=data.columns)
-#XTestLogPD = pd.DataFrame(X_test,columns=data.columns)
 
 # In[14]:
 
@@ -221,8 +293,6 @@ def ExploreData(start,end,size=4):
             ax[2].set_title('Full  {}'.format(c))
             plt.show()
 
-
-
 # In[16]:
 
 
@@ -230,7 +300,6 @@ import numpy as np
 from scipy.stats import boxcox
 
 from sklearn import decomposition
-from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import train_test_split
 
 import matplotlib.pyplot as plt
@@ -242,45 +311,85 @@ np.random.seed(42)
 import pandas as pd
 
 
+# In[ ]:
 
-# In[87]:
 
 
-lgbmx1 = lgb.LGBMRegressor(objective='regression',
-                        num_leaves=31,
-                        max_depth=2000,
-                        min_data_in_leaf=2,
-                        learning_rate= 0.059,
-                        feature_fraction= 0.91,
+
+print(X_data[0:2])
+
+""""lgbmx1 = lgb.LGBMRegressor(objective='regression',
+                        num_leaves=21,
+                        max_depth=150,
+                        min_data_in_leaf=3,
+                        learning_rate= 0.051,
+                        feature_fraction= 0.90,
                         bagging_fraction= 0.8,
-                        bagging_freq= 2,
-                        verbose= 0,
+                        bagging_freq= 5,
+                        verbose=0,
                         num_threads=6,
                         n_estimators=321)
 lgbmx1.fit(X_data, Y_data,
         eval_set=[(X_test, y_test)],
         eval_metric='l1',
-        early_stopping_rounds=1511)
+        early_stopping_rounds=511)
 y_lgbmx1 = lgbmx1.predict(X_test)
-trainrms = sqrt(mean_squared_error(y_test, y_lgbmx1))
+trainrms = sqrt(mean_squared_error(invboxcox(y_test,ylambda), invboxcox(y_lgbmx1,ylambda)))
 print("lgbmreg trainrms {}".format(  trainrms ) )
+"""
+
+from catboost import CatBoostRegressor
+catgbmx1=CatBoostRegressor(iterations=50, depth=15, learning_rate=0.01, loss_function='RMSE', thread_count=11)
+catgbmx1.fit(X_data, Y_data, eval_set=(X_test, y_test),plot=True)
+
+
+# In[ ]:
+
+
+trainrms = sqrt(mean_squared_error(invboxcox(y_test,ylambda), invboxcox(y_lgbmx1,ylambda)))
+print("lgbmreg trainrms {}".format(  trainrms ) )
+
+print('Plot feature importances...')
+#print( list(lgbmx1.feature_importances_ ))
+NameImp  = list(zip( X_data.columns , list(lgbmx1.feature_importances_ ) ))
+print(NameImp)
+import operator
+print( list(NameImp.sort(key=operator.itemgetter(1))))
+
+ax = lgb.plot_importance(lgbmx1, max_num_features=10)
+plt.show()
+
+
+# In[95]:
 
 
 # In[75]:
 from sklearn import utils
 
-X_Cdata, X_Ctest, Y_Cdata, Y_Ctest = train_test_split(data, Y, test_size=0.20, random_state=42)
+X_Cdata, X_Ctest, Y_Cdata, Y_Ctest = train_test_split(dataPCA, YBC, test_size=0.20, random_state=42)
 lab_enc = preprocessing.LabelEncoder()
 
-lab_enc.fit(Y)
-Y_FULL_encoded = lab_enc.transform(Y)
+
+# In[94]:
+
+
+print(np.unique(YBC).shape)
+
+
+# In[96]:
+
+
+lab_enc.fit(YBC)
+Y_FULL_encoded = lab_enc.transform(YBC)
 Y_data_encoded = lab_enc.transform(Y_Cdata)
 Y_test_encoded = lab_enc.transform(Y_Ctest)
 Y_data_encoded.shape
 
 print(utils.multiclass.type_of_target(Y_data_encoded))
 
-lgbmClass1 = lgb.LGBMClassifier(n_estimators=171, objective='multiclassova' )
+lgbmClass1 = lgb.LGBMClassifier(n_estimators=40, 
+                               num_threads=10,
+                                objective='multiclassova' )
 
 lgbmClass1.fit(data, Y_FULL_encoded,
         eval_set=[(X_Ctest, Y_test_encoded)],
@@ -294,10 +403,10 @@ trainrms = sqrt(mean_squared_error(
 print("lgbmClass1  trainrms {}".format(  trainrms ) )
 
 
+# In[ ]:
 
 
 # In[82]:
-
 
 lgbm2 = lgb.LGBMRegressor(objective='regression',
                         num_leaves=31,
@@ -308,7 +417,7 @@ lgbm2 = lgb.LGBMRegressor(objective='regression',
                         bagging_freq= 7,
                         verbose= 0,
                         n_estimators=1511,
-                        num_threads=3,
+                        num_threads=4,
                         boosting="dart")
 
 lgbm1 = lgb.LGBMRegressor(objective='regression',
@@ -319,25 +428,39 @@ lgbm1 = lgb.LGBMRegressor(objective='regression',
                         bagging_fraction= 0.8,
                         bagging_freq= 2,
                         verbose= 0,
+                        num_threads=4,
                         n_estimators=2511)
 
-lgbm2.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l2',  early_stopping_rounds=511)
-lgbm1.fit(dataPCA, Y, eval_set=[(X_test, y_test)], eval_metric='l1',  early_stopping_rounds=511)
+lgbm2.fit(dataPCA, YBC, eval_set=[(dataBC, YBC)], eval_metric='l2',  early_stopping_rounds=511)
+lgbm1.fit(dataPCA, YBC, eval_set=[(dataBC, YBC)], eval_metric='l1',  early_stopping_rounds=511)
+
+
+# In[ ]:
 
 
 # In[89]:
-
 
 print("Predict  lgbm1...")
 ytest_lgbm1= invboxcox(lgbm1.predict(testdataPCA),ylambda)
 print("Predict  lgbm2...")
 ytest_lgbm2= invboxcox(lgbm2.predict(testdataPCA),ylambda)
 
+print("Predict  lgbmx1...")
 ytest_lgbmx1= invboxcox(lgbmx1.predict(testdataPCA),ylambda)
 
-print("Predict  lgbmx2...")
+
+# In[ ]:
+
+
+print("Predict  lgbmClass1...")
 ytest_lgbmClass1= lgbmClass1.predict(testdata)
 
+
+# In[ ]:
+
+
+ytest_lgbmInvClass1 = lab_enc.inverse_transform( ytest_lgbmClass1  )
+print(ytest_lgbmInvClass1[0:10])
 
 plt.figure(figsize=(11,11))
 plt.scatter(range(0,len(ytest_lgbm1)), ytest_lgbm1, s=100,  marker="s", label='ytest_lgbm1')
@@ -346,7 +469,7 @@ plt.ylabel('ytest_lgbm1 ', fontsize=12)
 plt.title("ytest_lgbm1 Distribution", fontsize=14)
 plt.show()
 plt.figure(figsize=(11,11))
-plt.scatter(range(0,len(ytest_lgbm2)), ytest_lgbmClass1, s=100,  marker="s", label='ytest_lgbmClass1')
+plt.scatter(range(0,len(ytest_lgbm2)), ytest_lgbmInvClass1, s=100,  marker="s", label='ytest_lgbmClass1')
 plt.xlabel('index', fontsize=12)
 plt.ylabel('ytest_lgbmClass1 ', fontsize=12)
 plt.title("ytest_lgbmClass1 Distribution", fontsize=14)
@@ -354,7 +477,7 @@ plt.show()
 
 
 plt.figure(figsize=(11,11))
-plt.scatter( ytest_lgbm1 , ytest_lgbmClass1, s=100,  marker="s", label='lgbm1_RFT ' )
+plt.scatter( ytest_lgbm1 , ytest_lgbmInvClass1, s=100,  marker="s", label='lgbm1_RFT ' )
 plt.xlabel('ytest_lgbm1', fontsize=12)
 plt.ylabel('ytest_lgbmClass1 ', fontsize=12)
 plt.title("ytest_lgbmClass1 lgbm1 Distribution", fontsize=14)
@@ -368,15 +491,17 @@ plt.title("RF lgbm2 Distribution", fontsize=14)
 plt.show()
 
 
-# In[91]:
+# In[ ]:
 
+
+# In[91]:
 
 ypredavg = pd.DataFrame(dict(
     XLGB1=ytest_lgbmx1,
     LGB1=ytest_lgbm1,
     LGB2=ytest_lgbm2,
-    CLASS=ytest_lgbmClass1,
-    AVG= (ytest_lgbmClass1 + ytest_lgbm1 + ytest_lgbm2 + ytest_lgbmx1  )/4  ) )
+    CLASS=ytest_lgbmInvClass1,
+    AVG= (ytest_lgbm1 + ytest_lgbm2   )/2  ) )
 
 print(ypredavg.columns)
 ypredavg.to_csv(filepath + "/tmp/FinalFinal.csv", index=False)
@@ -384,23 +509,11 @@ print(ypredavg.mean())
 print(ypredavg.std())
 
 
-# In[93]:
-
-
-ySubmit = pd.DataFrame(dict( ID=testID,target=(ypredavg["AVG"] )))
-ySubmit.to_csv(filepath + "/tmp/submit.csv", index=False)
-print(ySubmit.shape)
-
-
-# In[94]:
-
-
-
-
 # In[ ]:
 
 
-#ySubmit = pd.DataFrame(dict( ID=testID,target=ypredFinalFinal["lgbm"]  ))
-#ySubmit.to_csv(filepath + "/tmp/submit.csv", index=False)
-#print("write submit....")
+# In[93]:
+ySubmit = pd.DataFrame(dict( ID=testID,target=(ypredavg["AVG"] )))
+ySubmit.to_csv(filepath + "/tmp/submit.csv", index=False)
+print(ySubmit.shape)
 
