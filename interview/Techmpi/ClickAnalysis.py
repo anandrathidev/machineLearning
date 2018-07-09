@@ -30,24 +30,43 @@ data_file = filepath + "sample_data_clicks_conversions_events.csv"
 
 # In[]: Init 
 xdata = pd.read_csv(data_file)
+
 # explore columns &  Data Type 
 print("Num Cols {}".format(len(list(xdata.columns))))
 # explore dtypes
 print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+xdata.shape[0]
 
 ############################################################
 #################### explore dtypes ########################
 ############################################################
 xdata.drop(columns=["initial_tracking_uuid", "billable"], inplace=True)
 
-# explore columns &  Data Type 
+# Explore columns &  Data Type 
 print(xdata.head(1))
-print(xdata['event_created_at'].head())
-print(xdata['created_at'].head())
+
+print("conversion at event_created_at: {}".format( xdata['event_created_at'].head(5)))
+print("created_at: {}".format( xdata['created_at'].head(5)))
+
+print("Na in created_at {} ".format( 100*np.sum(xdata['created_at'].isna()) /  xdata.shape[0]))
+print("Na in event_created_at {} ".format( 100*np.sum(xdata['event_created_at'].isna()) /  xdata.shape[0]))
 
 print("Num Cols {}".format(len(list(xdata.columns))))
 # explore dtypes
 print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+uniqData = xdata.nunique()
+print(uniqData.sort_values())
+print(xdata.shape)
+print(np.sum(xdata.isna()))
+
+# Drop rows where created_at is NA 
+xdata['created_at'].isna()
+print(" xdata.shape Before drop NA in created_at {}".format(xdata.shape)  )
+xdata = xdata[xdata['created_at'].isna()==False]
+print(" xdata.shape After drop NA in created_at {}".format(xdata.shape)  )
+
 
 # In[]: Init 
 # transform types
@@ -74,7 +93,7 @@ def splitIP(x):
         ipl.append( ipl[0] + "." + ipl[1]  + "." + ipl[2] )
         return  pd.Series(ipl, index=[  'net1', 'net2', 'net3', 'net4' , 'net1.net2',  'net1.net2.net3' ])
     else:
-        return  pd.Series([x,x,x,x,x,x], index=[  'net1', 'net2', 'net3', 'net4' , 'net1.net2',  'net1.net2.net3' ])
+        return  pd.Series(["Unknown","Unknown","Unknown","Unknown","Unknown","Unknown"], index=[  'net1', 'net2', 'net3', 'net4' , 'net1.net2',  'net1.net2.net3' ])
 #Create IP address dataframe    
 ipDF = pd.DataFrame(xdata["ip_address_str"].apply( lambda x: splitIP(x) ))
 #Join ip address Data frame
@@ -106,8 +125,8 @@ def splitDomainNames(x):
 #Create IP address dataframe
 dsDF = pd.DataFrame(xdata["referrer_domain"].apply( lambda x: splitDomainNames(x) ))
 #Join ip address Data frame
-xdata=xdata.join(ipDF)
-
+xdata=xdata.join(dsDF)
+xdata=xdata.drop(columns=["referrer_domain"])
 
 # In[]: Init 
 
@@ -125,6 +144,8 @@ uniqData = xdata.nunique()
 print(uniqData.sort_values())
 print(xdata.shape)
 print(np.sum(xdata.isna()))
+
+xdata['event_created_at'].isna()
 
 
 # In[]: Init 
@@ -159,10 +180,15 @@ colstoDrop.add("device_os_version")
 
 colstoDrop.add("user_agent_language") ## should we co relate this with Country ???
 
+xdata["country_id"].dtype
+np.unique(xdata["country_id"])
+xdata["country_id"].fillna(0)
+xdata = xdata.assign(country_id= xdata["country_id"].fillna(0))
+
+
 PrintUniqVals(xdata,"referrer_domain") ## 
 xdata["referrer_domain"].fillna('Unknown', inplace=True )
-
-
+xdata["referrer_domain"].fillna('Unknown', inplace=True )
 
 
 PrintUniqVals(xdata,"browser") ## too many , no business use case 
@@ -170,7 +196,23 @@ xdata["browser"].fillna('Unknown', inplace=True )
 #xdata.assign(["browser"] = np.unique(xdata["browser"].str.replace(r'[0-9\.]', '', regex=True).str.strip().str.replace(r'\s+', '_', regex=True))
 xdata = xdata.assign(browser=xdata["browser"].str.replace(r'[0-9\.]', '', regex=True).str.strip().str.replace(r'\s+', '_', regex=True))
 
+PrintUniqVals(xdata,"state") ## state
+PrintUniqVals(xdata,"city") ## state
+colstoDrop.add("state") ## should we co relate this with Country ???
+colstoDrop.add("city") ## should we co relate this with Country ???
 
+xdata["campaign_target_category"].dtype
+xdata["campaign_target_category"].fillna('Unknown', inplace=True )
+
+# In[]: Init 
+xdata=xdata.drop(columns=list(colstoDrop))
+
+# In[]: Init 
+
+uniqData = xdata.nunique()
+print(uniqData.sort_values())
+print(xdata.shape)
+print(np.sum(xdata.isna()))
 
 
 # In[]: Init 
