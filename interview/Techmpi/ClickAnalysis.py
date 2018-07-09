@@ -1,0 +1,200 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul  5 14:09:58 2018
+
+@author: he159490
+"""
+
+# In[]: Imports
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesClassifier
+
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import  MaxAbsScaler
+from sklearn import preprocessing
+from sklearn.decomposition import SparsePCA
+from sklearn import feature_selection
+from sklearn.model_selection import train_test_split
+
+from sklearn import decomposition
+import matplotlib.pyplot as plt
+np.random.seed(42)
+import pandas as pd
+
+# In[]: Init 
+filepath = "/home/he159490/DS/Kaggle/SantanderValue//"
+filepath = "F:/DataScience/TECHM/"
+#filepath = "D:/Users/anandrathi/Documents/Work/Kaggle/Santander/"
+data_file = filepath + "sample_data_clicks_conversions_events.csv"
+
+# In[]: Init 
+xdata = pd.read_csv(data_file)
+# explore columns &  Data Type 
+print("Num Cols {}".format(len(list(xdata.columns))))
+# explore dtypes
+print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+############################################################
+#################### explore dtypes ########################
+############################################################
+xdata.drop(columns=["initial_tracking_uuid", "billable"], inplace=True)
+
+# explore columns &  Data Type 
+print(xdata.head(1))
+print(xdata['event_created_at'].head())
+print(xdata['created_at'].head())
+
+print("Num Cols {}".format(len(list(xdata.columns))))
+# explore dtypes
+print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+# In[]: Init 
+# transform types
+############################################################
+#################### transform types ########################
+############################################################
+kwargs = {"created_at" : pd.to_datetime(xdata["created_at"]) }
+xdata = xdata.assign( **kwargs )
+print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+kwargs = {"event_created_at" : pd.to_datetime(xdata["event_created_at"]) }
+xdata = xdata.assign( **kwargs )
+print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+
+# In[]: Init 
+#################################################################################
+#################### Split IP address to network vs host  #######################
+#################################################################################
+def splitIP(x):
+    if isinstance(x, str):
+        ipl = x.split(".")
+        ipl.append( ipl[0] + "." + ipl[1] )
+        ipl.append( ipl[0] + "." + ipl[1]  + "." + ipl[2] )
+        return  pd.Series(ipl, index=[  'net1', 'net2', 'net3', 'net4' , 'net1.net2',  'net1.net2.net3' ])
+    else:
+        return  pd.Series([x,x,x,x,x,x], index=[  'net1', 'net2', 'net3', 'net4' , 'net1.net2',  'net1.net2.net3' ])
+#Create IP address dataframe    
+ipDF = pd.DataFrame(xdata["ip_address_str"].apply( lambda x: splitIP(x) ))
+#Join ip address Data frame
+xdata=xdata.join(ipDF)
+
+
+# In[]: Init 
+#################################################################################
+#################### Split IP address to network vs host  #######################
+#################################################################################
+def splitDomainNames(x):
+    if isinstance(x, str):
+        ds2=[]
+        dsl = x.split(".")
+        if len(dsl) >=2:
+            ds2.append( dsl[-2]  )
+            ds2.append( dsl[-2] + "." + dsl[-1] )
+        elif len(dsl) ==1:
+            ds2.append( dsl[-1]  )
+            ds2.append( dsl[-1] + "." + dsl[-1] )
+        elif len(dsl) ==0:
+            ds2.append( "Unknown"  )
+            ds2.append( "Unknown" + "." + "Unknown" )
+            
+        return  pd.Series(ds2, index=[  'domain', 'domainExt'])
+    else:
+        return  pd.Series(["Unknown","Unknown.Unknown"], index=[ 'domain', 'domainExt' ])
+    
+#Create IP address dataframe
+dsDF = pd.DataFrame(xdata["referrer_domain"].apply( lambda x: splitDomainNames(x) ))
+#Join ip address Data frame
+xdata=xdata.join(ipDF)
+
+
+# In[]: Init 
+
+print("Cols {}".format(list(zip( list(xdata.columns), list(xdata.dtypes)))))
+
+# In[]: Init 
+#################################################################################
+#################### Find low var data                    #######################
+#################### find overfitting data                #######################
+#################### replace NA values                  #######################
+#################### Consolidate categories                #######################
+#################################################################################
+
+uniqData = xdata.nunique()
+print(uniqData.sort_values())
+print(xdata.shape)
+print(np.sum(xdata.isna()))
+
+
+# In[]: Init 
+## Get Rid of data which is low/high variance &  importance
+
+np.sum(xdata.isna())
+
+colstoDrop = set()
+def PrintUniqVals(x,c):
+    print("{} {}".format(c ,x[c].unique()))
+
+PrintUniqVals(xdata,"revenue") ## array([nan])
+colstoDrop.add("revenue") 
+PrintUniqVals(xdata,"payout") ## array([nan])
+colstoDrop.add("payout") 
+
+PrintUniqVals(xdata,"conversion_step_id") ## conversion_step_id [ nan 947.] already acptured by tracing id 
+colstoDrop.add("conversion_step_id") 
+
+PrintUniqVals(xdata,"referral_charge") ## referral_charge [nan  0.] no value
+colstoDrop.add("referral_charge") 
+
+PrintUniqVals(xdata,"referral_charge") ## referral_charge [nan  0.] no value
+colstoDrop.add("referral_charge") 
+
+PrintUniqVals(xdata,"device_os") ## keep 
+xdata["device_os"].fillna('Unknown', inplace=True )
+PrintUniqVals(xdata,"device_os") ## chk
+
+PrintUniqVals(xdata,"device_os_version") ## too many , no business use case 
+colstoDrop.add("device_os_version") 
+
+colstoDrop.add("user_agent_language") ## should we co relate this with Country ???
+
+PrintUniqVals(xdata,"referrer_domain") ## 
+xdata["referrer_domain"].fillna('Unknown', inplace=True )
+
+
+
+
+PrintUniqVals(xdata,"browser") ## too many , no business use case 
+xdata["browser"].fillna('Unknown', inplace=True )
+#xdata.assign(["browser"] = np.unique(xdata["browser"].str.replace(r'[0-9\.]', '', regex=True).str.strip().str.replace(r'\s+', '_', regex=True))
+xdata = xdata.assign(browser=xdata["browser"].str.replace(r'[0-9\.]', '', regex=True).str.strip().str.replace(r'\s+', '_', regex=True))
+
+
+
+
+# In[]: Init 
+gbdate = xdata.groupby([ 'created_at' ]).count()
+gbdusDay = xdata.set_index('created_at').groupby(pd.TimeGrouper('D')).agg(['min','max','count','nunique'])
+
+
+# In[]: Init 
+xdata.groupby(['created_at', 'net1.net2.net3']).count()
+xdata.groupby(['group']).agg(['min','max','count','nunique'])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
