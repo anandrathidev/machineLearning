@@ -118,9 +118,9 @@ def splitDomainNames(x):
             ds2.append( "Unknown"  )
             ds2.append( "Unknown" + "." + "Unknown" )
             
-        return  pd.Series(ds2, index=[  'domain', 'domainExt'])
+        return  pd.Series(ds2, index=[  'referrerdomain', 'referrerdomainExt'])
     else:
-        return  pd.Series(["Unknown","Unknown.Unknown"], index=[ 'domain', 'domainExt' ])
+        return  pd.Series(["Unknown","Unknown.Unknown"], index=[ 'referrerdomain', 'referrerdomainExt' ])
     
 #Create IP address dataframe
 dsDF = pd.DataFrame(xdata["referrer_domain"].apply( lambda x: splitDomainNames(x) ))
@@ -185,12 +185,6 @@ np.unique(xdata["country_id"])
 xdata["country_id"].fillna(0)
 xdata = xdata.assign(country_id= xdata["country_id"].fillna(0))
 
-
-PrintUniqVals(xdata,"referrer_domain") ## 
-xdata["referrer_domain"].fillna('Unknown', inplace=True )
-xdata["referrer_domain"].fillna('Unknown', inplace=True )
-
-
 PrintUniqVals(xdata,"browser") ## too many , no business use case 
 xdata["browser"].fillna('Unknown', inplace=True )
 #xdata.assign(["browser"] = np.unique(xdata["browser"].str.replace(r'[0-9\.]', '', regex=True).str.strip().str.replace(r'\s+', '_', regex=True))
@@ -207,6 +201,13 @@ xdata["campaign_target_category"].fillna('Unknown', inplace=True )
 # In[]: Init 
 xdata=xdata.drop(columns=list(colstoDrop))
 
+for cat in ["device_os","tracking_type_id", "advertiser_manager_id", "campaign_target_category", "affiliate_manager_id",
+            "browser","country_id", "affiliate_id", "campaign_id","net1", "net2", "net3",
+          "net1.net2","referrerdomain", "referrerdomainExt"]:
+  xdata[cat]=xdata[cat].astype("category")  
+    
+    
+
 # In[]: Init 
 
 uniqData = xdata.nunique()
@@ -216,26 +217,39 @@ print(np.sum(xdata.isna()))
 
 
 # In[]: Init 
+xdata = xdata.set_index('created_at')
+xdata = xdata.assign(click=1)
+
 gbdate = xdata.groupby([ 'created_at' ]).count()
 gbdusDay = xdata.set_index('created_at').groupby(pd.TimeGrouper('D')).agg(['min','max','count','nunique'])
 
 
 # In[]: Init 
-xdata.groupby(['created_at', 'net1.net2.net3']).count()
-xdata.groupby(['group']).agg(['min','max','count','nunique'])
+#xdata.groupby(['created_at', 'net1.net2.net3']).count()
+#xdata.groupby(['group']).agg(['min','max','count','nunique'])
 
 
+#campaign1D = xdata.groupby(['campaign_id', 'created_at']).resample('1D', label='right', closed='right').sum()
+CampAffilate1D = xdata.groupby(['campaign_id', 'affiliate_id', 'referrerdomain']).resample('1D', label='right', closed='right')['click'].agg('sum').reset_index()
+CampAffilate1D = CampAffilate1D.set_index('created_at')
+CampAffilate1D.dtypes
+CampAffilate1D["click"].plot()
+CampAffilate1Dcumsum =  CampAffilate1D["click"].cumsum()
+CampAffilate1Dcumsum.plot()
 
 
-
-
-
-
-
-
-
-
-
+CampAffilate = pd.pivot_table(xdata, columns=['affiliate_id', 'referrerdomain'],  values=['click'], index=['campaign_id', 'created_at'],
+aggfunc={'affiliate_id': [ np.count_nonzero, lambda x: len(x.unique())],
+'referrerdomain': [ np.count_nonzero, lambda x: len(x.unique())]}).reset_index()
+    
+CampAffilate.columns = [ x[0] + x[1].replace("<lambda>","_UniqueCount")
+               .strip().replace("count_nonzero","_Count")
+               .strip() for x in CampAffilate.columns]
+     
+CPDFList =  [ xdata[xdata['campaign_id']==camp]
+  for camp in list(np.unique(xdata['campaign_id']))]
+    
+CampAffilate.resample('1D', label='right', closed='right').sum()
 
 
 
