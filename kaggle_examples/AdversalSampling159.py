@@ -268,7 +268,6 @@ def DecomposedFeatures(train,  test,
                                 total,
                                 addtrain,
                                 addtest,
-                                n_components,
                                 use_pca = 0.0,
                                 use_tsvd = 0.0,
                                 use_ica = 0.0,
@@ -276,7 +275,6 @@ def DecomposedFeatures(train,  test,
                                 use_grp = 0.0,
                                 use_srp = 0.0,
                                 use_pls = 0.0 ):
-    N_COMP = int(n_components  * train.shape[1]) + 1
     print("\nStart decomposition process...")
     train_decomposed = [addtrain]
     test_decomposed = [addtest]
@@ -370,8 +368,8 @@ def DecomposedFeatures(train,  test,
     return train_with_only_decomposed_features, test_with_only_decomposed_features
 
 print("train pca... ")
-trainDecomp, testDecomp = DecomposedFeatures(train=data, test=testdata, total=fulldata, 
-                                      addtrain=x_trainTOPRF, addtest=x_testTOPRF, n_components=0.97,
+trainDecomp, testDecomp = DecomposedFeatures(train=dataScaledLog, test=testdataScaledLog, total=fulldataScaledLog, 
+                                      addtrain=x_trainTOPRF, addtest=x_testTOPRF, 
                                       use_pca = 0.95,
                                       use_tsvd = 0.00,
                                       use_ica = 0.00,
