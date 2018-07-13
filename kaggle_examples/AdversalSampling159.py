@@ -228,39 +228,6 @@ drop_list = Covariateshift(X_train=dataScaledLog, X_test=testdataScaledLog) #
 # In[ ]:
 
 
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-
-def remove_features_using_importance(x_train, y_train, x_test, num_of_features):
-    def rmsle(actual, predicted):
-        return np.sqrt(np.mean(np.power(np.log1p(actual)-np.log1p(predicted), 2)))
-
-    print("Split train and test")
-    #x1, x2, y1, y2 = StratifiedSample(data=x_train, MY=y_train, test_size = 0.25, random_state = 42)
-    print("Train RF")
-    model = RandomForestRegressor(n_estimators = 211, n_jobs = -2, random_state = 7)
-    model.fit(x_train, y_train)
-    print(rmsle(np.expm1(y_train), np.expm1(model.predict(x_train))))
-
-    print("Get columns by feature importances")
-    col_df = pd.DataFrame({'importance': model.feature_importances_, 'feature': x_train.columns})
-    col_df_sorted = col_df.sort_values(by = ['importance'], ascending = [False])
-    columns = col_df_sorted[:num_of_features]['feature'].values
-
-    x_train = x_train[columns]
-    x_test = x_test[columns]
-
-    return x_train, x_test
-
-num_of_features = int(data.shape[1] * 0.01)+1
-x_trainTOPRF, x_testTOPRF = remove_features_using_importance(x_train=dataScaledLog, y_train=YBC, x_test=testdataScaledLog , num_of_features = num_of_features )
-
-print("x_trainTOPRF {}".format(x_trainTOPRF.shape) )
-print("x_testTOPRF {}".format(x_testTOPRF.shape) )
-
-
-# In[ ]:
-
-
 
 from sklearn.random_projection import GaussianRandomProjection, SparseRandomProjection
 from sklearn.grid_search import GridSearchCV
@@ -369,7 +336,7 @@ def DecomposedFeatures(train,  test,
 
 print("train pca... ")
 trainDecomp, testDecomp = DecomposedFeatures(train=dataScaledLog, test=testdataScaledLog, total=fulldataScaledLog, 
-                                      addtrain=x_trainTOPRF, addtest=x_testTOPRF, 
+                                      addtrain=x_trainTOPRF, addtest=x_testTOPRF, n_components=0.97,
                                       use_pca = 0.95,
                                       use_tsvd = 0.00,
                                       use_ica = 0.00,
