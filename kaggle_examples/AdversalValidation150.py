@@ -458,19 +458,18 @@ print("train_set_with_predictions_for_test_set_similarity {}".format(trainTestSi
 # In[ ]:
 
 
-# In[ ]:
+# In[226]:
 
 
 
 
 
-# In[194]:
+# In[224]:
 
 
 def AdversarialTrainVal(train, test ):
     train = train.sort_values(by=['prob_test'], ascending=False)
     Xtrain = train.nlargest(int(train.shape[0]*0.999), 'prob_test')
-    Xtrain = Xtrain.append(train.nlargest(int(train.shape[0]*0.51), 'prob_test'))
     Xtrain = Xtrain.append(train.nlargest(int(train.shape[0]*0.41), 'prob_test'))
     Xtrain = Xtrain.append(train.nlargest(int(train.shape[0]*0.31), 'prob_test'))
     for i in range(200):
@@ -503,15 +502,40 @@ x_train, y_train, x_val, y_val, x_test = AdversarialTrainVal(train=trainTestSimi
 [ print("After Adversal  {}".format(x.shape)) for x in [x_train, y_train, x_val, y_val, x_test] ] 
 
 
-# In[216]:
+# In[239]:
 
 
+del trainTestSimilar
+del fulldata
+del data
+del testdata
+del dataScaledLog
+del testdataScaledLog
+del fulldataScaledLog
 gc.collect()
 
 
-# In[217]:
+# In[241]:
 
 
+del dataLogScaled
+del testdataLogScaled
+del fulldataLogScaled
+del fulldatarscaled
+gc.collect()
+
+
+# In[242]:
+
+
+del fulldatarscaled
+gc.collect()
+
+
+# In[ ]:
+
+
+gc.collect()
 x_train, x_test, x_val = DecomposedFeatures(train=x_train, test=x_test, val=x_val,
                                       total=x_test,
                                       addtrain=None, addtest=None,
@@ -521,7 +545,7 @@ x_train, x_test, x_val = DecomposedFeatures(train=x_train, test=x_test, val=x_va
                                       use_fa = 0.00,
                                       use_grp= 0.0, #use_grp=-0.14485,
                                       use_srp=0.00,
-                                      use_KPCA=0.20,
+                                      use_KPCA=0.30,
                                       kernal="rbf")
 print("trainDecomp {}".format(trainDecomp.shape) )
 print("testDecomp {}".format(testDecomp.shape) )
