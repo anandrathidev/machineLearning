@@ -534,7 +534,7 @@ datanewF = datanewF.drop(['is_test', "target"], 1)
 testdatanewF= testdatanewF.drop( ['is_test', "target"], 1)
 
 
-# In[97]:
+# In[101]:
 
 
 print("train pca... ")
@@ -555,7 +555,7 @@ trainDecomp, testDecomp, valDecomp = DecomposedFeatures(train=x_train,
                                       use_tsvd = 0.00,
                                       use_ica = 0.50,
                                       use_fa = 0.50,
-                                      use_grp=50.1,
+                                      use_grp=1100.00,
                                       use_srp=0.00,
                                        use_KPCA=0.00)
 
@@ -702,7 +702,7 @@ print(ypredavg.mean())
 print(ypredavg.std())
 
 
-# In[87]:
+# In[99]:
 
 
 # In[93]:
