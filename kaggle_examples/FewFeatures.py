@@ -606,8 +606,8 @@ lgbm2 = lgb.LGBMRegressor(objective='regression',
                         learning_rate= 0.041,
                         feature_fraction= 0.9,
                         bagging_fraction= 0.8,
-                        reg_alpha =1.0,
-                        reg_lambda=2.0,   
+                        reg_alpha =0.9,
+                        reg_lambda=1.1,   
                         bagging_freq= 4,
                         verbose= -1,
                         num_threads=7,
@@ -636,6 +636,8 @@ lgbm1 = lgb.LGBMRegressor(objective='regression',
                         bagging_fraction= 0.8,
                         bagging_freq= 6,
                         verbose= -1,
+                        reg_alpha = 2.0,
+                        reg_lambda = 3.0,  
                         is_unbalance=True,  
                         num_threads=7,
                         n_estimators=11111)
@@ -702,7 +704,7 @@ print(ypredavg.mean())
 print(ypredavg.std())
 
 
-# In[99]:
+# In[104]:
 
 
 # In[93]:
