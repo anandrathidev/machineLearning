@@ -1,6 +1,11 @@
 
 # coding: utf-8
 
+# In[ ]:
+
+
+# coding: utf-8
+
 # In[32]:
 
 
@@ -180,75 +185,52 @@ print(fulldataScaledLog[0:1])
 # In[ ]:
 
 
+# In[ ]:
+
+
 # In[33]:
-
-
 def CreateNF(x):
     newFdata  = pd.DataFrame( { 'NZ':x.astype(bool).sum(axis=1)})
+    newFdata=newFdata.assign(ZRATIO= x.astype(bool).sum(axis=1) / (5000 - x.astype(bool).sum(axis=1)))
+    newFdata=newFdata.assign(ZCUNT= (5000 - x.astype(bool).sum(axis=1)))
     newFdata=newFdata.assign(STD=np.std(x, axis=1))
     newFdata=newFdata.assign(MEAN=np.mean(x, axis=1))
+    newFdata=newFdata.assign(MAX=np.min(x, axis=1))
     newFdata=newFdata.assign(MED=np.median(x, axis=1))
     newFdata=newFdata.assign(SUMX=np.sum(x, axis=1))
     return newFdata
 
 
+# In[ ]:
+
+
 # In[34]:
-
-
 datanewF = CreateNF(dataScaledLog)
-
-
-# In[35]:
-
-
 testdatanewF = CreateNF(testdataScaledLog)
-
-
-# In[36]:
-
-
 fulldatanewF = CreateNF(fulldataScaledLog)
 
 
-# In[29]:
-
-
-
+# In[ ]:
 
 
 # In[37]:
-
-
 rscaler.fit(fulldatanewF)
-
-
-# In[38]:
-
-
-fulldatanewF= rscaler.transform( fulldatanewF )
-datanewF = rscaler.transform( datanewF )
-testdatanewF = rscaler.transform(testdatanewF)
-
-
-# In[41]:
-
-
+fulldatanewF= pd.DataFrame(rscaler.transform( fulldatanewF ))
+datanewF = pd.DataFrame(rscaler.transform( datanewF )
+testdatanewF = pd.DataFrame(rscaler.transform(testdatanewF))
 
 print(datanewF.shape)
 print(testdatanewF.shape)
 print(fulldatanewF.shape)
 
-datanewF = pd.DataFrame(datanewF)
-testdatanewF = pd.DataFrame(testdatanewF)
-fulldatanewF = pd.DataFrame(fulldatanewF)
-
-
-# In[79]:
-
-
 print(datanewF.head(2))
 print(testdatanewF.head(2))
 print(fulldatanewF.head(2))
+                        
+
+
+# In[ ]:
+
 
 def PrintCurrent(pstr):
     import datetime
