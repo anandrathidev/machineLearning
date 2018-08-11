@@ -1,0 +1,28 @@
+
+Frequency Plot for Categorical Data
+df['class'].value_counts().plot()
+df['class'].value_counts().plot('bar')
+df['class'].value_counts().plot('barh') #horizontal bar plot
+df['class'].value_counts().plot('barh').invert_yaxis() #horizontal bar plot
+Histograms for Numberical Data
+df['sepal_length_cm'].hist() #horizontal bar plot
+df['sepal_length_cm'].hist(bins = 30) #add granularity
+df['sepal_length_cm'].hist(bins = 30, range=[4, 8]) #add granularity & range
+df['sepal_length_cm'].hist(bins = 30, range=[4, 8], facecolor='gray') #add granularity & range & color
+#histogram
+import seaborn as sns
+sns.distplot(df_train['SalePrice']);
+Histograms SIDE BY SIDE
+
+d = pd.read_csv('runs.csv')
+score_india = d['score_india']
+legend = ['India', 'Pakistan']
+score_pk = d['score_pk']
+plt.hist([score_india, score_pk], color=['orange', 'green'])
+plt.xlabel("Runs/Delivery")
+plt.ylabel("Frequency")
+plt.legend(legend)
+plt.xticks(range(0, 7))
+plt.yticks(range(1, 20))
+plt.title('Champions Trophy 2017 Final\n Runs scored in 3 overs')
+plt.show()
