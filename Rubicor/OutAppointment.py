@@ -31,7 +31,8 @@ from sklearn.model_selection import train_test_split
 
 
 xpath = "/home/he159490/DS/OUT/"
-AppointCSV = "AppointmentsJanToJuly.csv"
+xpath = "/media/DataDrive/"
+AppointCSV = "Appointments_01Aug2015_06Aug2018.csv"
 
 
 # In[4]:
@@ -113,30 +114,32 @@ def print_evaluation_scores(y_val, predicted):
 print(xpath + AppointCSV)
 
 
-# In[7]:
+# In[ ]:
+
 
 
 AppointdfO = pd.read_csv(xpath + AppointCSV)
 #AppointdfO.head(2)
+#AppointdfO = pd.read_csv(xpath + "/Appointments_07Aug2018_10Aug2018.csv")
 
 
-# In[8]:
+# In[ ]:
 
 
 AppointdfO.shape
 
 
-# In[9]:
+# In[ ]:
 
 
-print(AppointdfO['Hosp Code'].value_counts())
-FS  = AppointdfO['Hosp Code']=='FS' 
-FH = AppointdfO['Hosp Code']=='FH' 
-RPH = AppointdfO['Hosp Code']=='RPH' 
-print(AppointdfO['Hosp Code'][FS | FH])
+#print(AppointdfO['Hosp Code'].value_counts())
+#FS  = AppointdfO['Hosp Code']=='FS' 
+#FH = AppointdfO['Hosp Code']=='FH' 
+#RPH = AppointdfO['Hosp Code']=='RPH' 
+#print(AppointdfO['Hosp Code'][FS | FH])
 
 
-# In[10]:
+# In[ ]:
 
 
 #AppointdfOFSFH = AppointdfO[FH | FS]
@@ -146,14 +149,14 @@ AppointdfOFSFH = AppointdfO
 print(AppointdfOFSFH['Hosp Code'].value_counts())
 
 
-# In[11]:
+# In[ ]:
 
 
 print(AppointdfOFSFH['Date Of Appointment'].min())
 print(AppointdfOFSFH['Date Of Appointment'].max())
 
 
-# In[12]:
+# In[ ]:
 
 
 AppointdfOFSFH['Date Of Appointment'] = pd.to_datetime(AppointdfOFSFH['Date Of Appointment'])
@@ -162,41 +165,41 @@ print(AppointdfOFSFH['Date Of Appointment'].max())
 from dateutil.relativedelta import relativedelta
 
 
-# In[13]:
+# In[ ]:
 
 
 from dateutil import parser
-dtJul = parser.parse("28 July 2018")
-dtJan = parser.parse("01 Jan 2018")
+dtJul = parser.parse("06 Aug 2018")
+dtJan = parser.parse("01 Jan 2013")
 print(dtJul)
 print(dtJan)
 
 
-# In[14]:
+# In[ ]:
 
 
 AppointdfOFSFH=AppointdfOFSFH.sort_values('Date Of Appointment').reset_index()
 print(AppointdfOFSFH['Date Of Appointment'].min())
 print(AppointdfOFSFH['Date Of Appointment'].max())
 from dateutil.relativedelta import relativedelta
-AppointdfOFSFH = AppointdfOFSFH.loc[AppointdfOFSFH['Date Of Appointment'].between(dtJan, dtJul)]
+#AppointdfOFSFH = AppointdfOFSFH.loc[AppointdfOFSFH['Date Of Appointment'].between(dtJan, dtJul)]
 print(AppointdfOFSFH['Date Of Appointment'].min())
 print(AppointdfOFSFH['Date Of Appointment'].max())
 
 
-# In[15]:
+# In[ ]:
 
 
 print(AppointdfOFSFH.columns)
 
 
-# In[16]:
+# In[ ]:
 
 
 print(AppointdfOFSFH.shape[0])
 
 
-# In[17]:
+# In[ ]:
 
 
 start = AppointdfOFSFH.shape[0]-10000
@@ -205,61 +208,105 @@ print("start {} end {}".format(start,end))
 AppointdfOFSFH.loc[start:end]
 
 
-# In[18]:
+# In[ ]:
 
 
 print(list(AppointdfOFSFH.columns))
 
 
-# In[19]:
+# In[ ]:
 
 
 AppointdfOFSFH.tail()
 
 
-# In[20]:
+# In[ ]:
 
 
-print(AppointdfOFSFH[AppointdfOFSFH['Source Appointment Reason'] == '[No Value]'].count())
-print(AppointdfOFSFH['Source Appointment Reason'].value_counts())
+print(AppointdfOFSFH[AppointdfOFSFH['Appointment Reason Code'] == '[No Value]'].count())
+print(AppointdfOFSFH['Appointment Reason Code'].value_counts())
 
 
-# In[21]:
+# In[ ]:
 
 
-mask = AppointdfOFSFH['Source Appointment Reason'] == '[No Value]'
-AppointdfOFSFH['Source Appointment Reason'].loc[mask]  = 'NoVal'
+mask = AppointdfOFSFH['Appointment Reason Code'] == '[No Value]'
+AppointdfOFSFH['Appointment Reason Code'].loc[mask]  = 'NoVal'
 
 
-# In[22]:
+# In[ ]:
 
 
-print(AppointdfOFSFH['Source Appointment Reason'].value_counts())
+mask = AppointdfOFSFH['AccountTypeCode'] == '[No Value]'
+AppointdfOFSFH['AccountTypeCode'].loc[mask]  = 'NoVal'
 
 
-# In[29]:
+# In[ ]:
+
+
+#print(AppointdfOFSFH.replace({r'No Value': 'NoVal'}, regex=True))
+AppointdfOFSFH= AppointdfOFSFH.replace({r'No Value': 'NoVal'}, regex=True)
+
+
+# In[ ]:
+
+
+#AppointdfOFSFH.search(r'No Value', regex=True)
+NoValmask = AppointdfOFSFH.applymap(lambda x:  r'No Value' in str(x))
+
+
+# In[ ]:
+
+
+np.count_nonzero(NoValmask)
+
+
+# In[ ]:
+
+
+print(AppointdfOFSFH['Appointment Reason Code'].value_counts())
+
+
+# In[ ]:
+
+
+print(AppointdfOFSFH.columns)
+
+
+# In[ ]:
 
 
 def prepareData(Appointdf):
     print("Subset data")
     Appointdf= Appointdf[[
-     'Hosp Code',
-     'Postcode',  
-     'Appointment Sequence',
-     'Date Of Appointment',
-     'Date Of Appointment Booked',
-     'Clinic Category Code',
-     'Time of Slot',
-     'Indigenous Status at Apppointment',
-     'Account Type',
-     'Is Interpreter Required',
-     'Age',
-     'DayOfWeekShort',
-     #'MonthNameShort',
-     'Gender',
-     #'PriorAttendanceRate',
-     'Source Appointment Reason',
-     'Patient Attended', ## Y 
+        'Hosp Code', 
+        'SourceAppointmentTypeCode',
+        'AppointmentSequence',
+       'Date Of Appointment', 
+        'Date Of Appointment Booked',
+       #'Clinic Category Code', 
+        'ClinicType', 
+        'SpecialtyCode', 
+        'Time of Slot',
+       'Appointment Reason Code', 
+        'Age', 
+        'Indigenous Status at Apppointment',
+       'AccountTypeCode', 
+        'IsFirstNonCancelledAppointment',
+       'Is Interpreter Required', 
+        'DayOfWeekShort', 
+        'MonthNameShort',
+       'Postcode', 
+        'Gender', 
+        'MinTemp', 
+        'MaxTemp', 
+        'rainfall', 
+        'AHSCode',
+       'RemotenessCode', 
+        'SEIFAStatePercentile', 
+        'T2CODE', 
+       'PriorAttendanceRate',
+        'Patient Attended' ##Y
      ]]
 
     print("")
@@ -268,7 +315,7 @@ def prepareData(Appointdf):
     Appointdf["Date Of Appointment"] =  pd.to_datetime(Appointdf["Date Of Appointment"])
     Appointdf['Date Of Appointment Booked'] =  pd.to_datetime(Appointdf['Date Of Appointment Booked'])
     Appointdf["Appoint_Book_Length"] = Appointdf["Date Of Appointment"] -  Appointdf['Date Of Appointment Booked']
-    Appointdf["Appoint_Book_Length"] = Appointdf["Appoint_Book_Length"].dt.total_seconds()
+    Appointdf["Appoint_Book_Length"] = Appointdf["Appoint_Book_Length"].dt.total_seconds()/ 3600 
     Appointdf = Appointdf.drop(columns=["Date Of Appointment", 'Date Of Appointment Booked', ])
 
     print("")
@@ -315,16 +362,24 @@ def prepareData(Appointdf):
     Appointdf['Appoint_Book_Length'] = Appointdf['Appoint_Book_Length'].replace(np.nan, Appointdf['Appoint_Book_Length'].mean())
 
     if 'Postcode' in Appointdf.columns:
-        novalmask = Appointdf.Postcode.str.contains('No Value', regex=False, na=False)
+        novalmask = Appointdf.Postcode.astype(str).str.contains('No Value', regex=False, na=False)
         Appointdf.loc[novalmask, 'Postcode'] = 1
         Appointdf.Postcode = Appointdf.Postcode.astype('int')
+    if 'AccountTypeCode' in Appointdf.columns:
+        novalmask = Appointdf['AccountTypeCode'].astype(str).str.contains('No Value', regex=False, na=False)
+        Appointdf.loc[novalmask, 'AccountTypeCode'] = 'NoVal'
 
+    if 'Appointment Reason Code' in Appointdf.columns:
+        novalmask = Appointdf['Appointment Reason Code'].str.contains('No Value', regex=False, na=False)
+        Appointdf.loc[novalmask, 'Appointment Reason Code'] = 'NoVal'
+        
+        
     print("............................................")
     print("............................................")
     print("Null count: {}".format( Appointdf.columns[Appointdf.isna().any()].tolist() ))
     print("............................................")
     print(Appointdf.isna().any())
-    Appointdf['Appointment Sequence']=Appointdf['Appointment Sequence'].fillna(Appointdf['Appointment Sequence'].mean())
+    Appointdf['AppointmentSequence']=Appointdf['AppointmentSequence'].fillna(Appointdf['AppointmentSequence'].mean())
     if 'PriorAttendanceRate' in Appointdf.columns:
         Appointdf['PriorAttendanceRate']=Appointdf['PriorAttendanceRate'].fillna(Appointdf['PriorAttendanceRate'].mean())
     # Look for NA values 
@@ -349,7 +404,139 @@ Appointdf.head(1).to_csv(xpath + "/AppointCSV.csv")
 # In[ ]:
 
 
+from  sklearn.preprocessing import LabelEncoder
 
+class MultiColumnLabelEncoder(LabelEncoder):
+    """
+    Wraps sklearn LabelEncoder functionality for use on multiple columns of a
+    pandas dataframe.
+
+    """
+    def __init__(self, columns=None):
+        self.columns = columns
+        self.all_encoders_ = {}
+        self.all_classes_ = {}
+
+    def fit(self, dframe):
+        """
+        Fit label encoder to pandas columns.
+
+        Access individual column classes via indexig `self.all_classes_`
+
+        Access individual column encoders via indexing
+        `self.all_encoders_`
+        """
+        # if columns are provided, iterate through and get `classes_`
+        if self.columns is not None:
+            # ndarray to hold LabelEncoder().classes_ for each
+            # column; should match the shape of specified `columns`
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape,dtype=object)
+            #self.all_encoders_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            for idx, column in enumerate(self.columns):
+                print("column {}".format( column ) )
+                # fit LabelEncoder to get `classes_` for the column
+                le = LabelEncoder()
+                
+                le = le.fit(dframe.loc[:, column].fillna('NA_VAL').values)
+                # append the `classes_` to our ndarray container
+                self.all_classes_[column] = np.array(le.classes_.tolist(), dtype=object)
+                
+                # append this column's encoder
+                self.all_encoders_[column] = le
+                #print("dframe.loc[:, column].values {}".format(dframe.loc[:, column].values ) )
+                print("self.all_encoders_[column]classes_.tolist() {}".format(self.all_encoders_[column].classes_.tolist()) )
+        else:
+            # no columns specified; assume all are to be encoded
+            self.columns = dframe.iloc[:, :].columns
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape,dtype=object)
+            self.all_classes_ = {}
+            for idx, column in enumerate(self.columns):
+                le = LabelEncoder()
+                le = le.fit(dframe.loc[:, column].fillna('NA_VAL').values)
+                self.all_classes_[column] = np.array(le.classes_.tolist(),dtype=object)
+                self.all_encoders_[column] = le
+        return self
+
+    def fit_transform(self, dframe):
+        """
+        Fit label encoder and return encoded labels.
+
+        Access individual column classes via indexing
+        `self.all_classes_`
+
+        Access individual column encoders via indexing
+        `self.all_encoders_`
+
+        Access individual column encoded labels via indexing
+        `self.all_labels_`
+        """
+        # if columns are provided, iterate through and get `classes_`
+        if self.columns is not None:
+            print("self.columns {}".format(self.columns))
+            # ndarray to hold LabelEncoder().classes_ for each
+            # column; should match the shape of specified `columns`
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            self.all_classes_ = {}
+            #self.all_encoders_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            self.all_encoders_ = {}
+            #self.all_labels_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            for idx, column in enumerate(self.columns):
+                # instantiate LabelEncoder
+                le = LabelEncoder()
+                # fit and transform labels in the column
+                dframe.loc[:, column] = le.fit_transform(dframe.loc[:, column].fillna('NA_VAL'))
+                # append the `classes_` to our ndarray container
+                self.all_classes_[column] = np.array(le.classes_.tolist(),dtype=object)
+                self.all_encoders_[column] = le
+                self.all_labels_[column] = le
+        else:
+            # no columns specified; assume all are to be encoded
+            self.columns = dframe.iloc[:, :].columns
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape,dtype=object)
+            self.all_classes_ = {}
+            for idx, column in enumerate(self.columns):
+                print("idx {}, column {}".format(idx, column))
+                le = LabelEncoder()
+                dframe.loc[:, column] = le.fit_transform(
+                        dframe.loc[:, column].fillna('NA_VAL').values)
+                self.all_classes_[column] = (column, 
+                                          np.array(le.classes_.tolist(),
+                                                  dtype=object))
+                self.all_encoders_[column] = le
+        return dframe
+
+    def transform(self, dframe):
+        """
+        Transform labels to normalized encoding.
+        """
+        print("self.all_encoders_ {}".format(self.all_encoders_))
+        if self.columns is not None:
+            print("self.columns {}".format(self.columns))
+            for idx, column in enumerate(self.columns):
+                print("idx {}, column {}".format(idx, column))
+                #print(self.all_encoders_[column].transform(dframe.loc[:, column].values))
+                dframe.loc[:, column] = self.all_encoders_[column].transform(dframe.loc[:, column].fillna('NA_VAL').values)
+        else:
+            self.columns = dframe.iloc[:, :].columns
+            for idx, column in enumerate(self.columns):
+                print("idx {}, column {}".format(idx, column))
+                dframe.loc[:, column] = self.all_encoders_[column].transform(dframe.loc[:, column].fillna('NA_VAL').values)
+        #return dframe.loc[:, ].values
+        return dframe
+
+    def inverse_transform(self, dframe):
+        """
+        Transform labels back to original encoding.
+        """
+        if self.columns is not None:
+            for idx, column in enumerate(self.columns):
+                dframe.loc[:, column] = self.all_encoders_[column]                    .inverse_transform(dframe.loc[:, column].values)
+        else:
+            self.columns = dframe.iloc[:, :].columns
+            for idx, column in enumerate(self.columns):
+                dframe.loc[:, column] = self.all_encoders_[column]                    .inverse_transform(dframe.loc[:, column].values)
+        return dframe
+    
 def add_missing_dummy_columns( d, columns ):
     missing_cols = set( columns ) - set( d.columns )
     for c in missing_cols:
@@ -402,28 +589,151 @@ def Dummify(Appointdf, cat_vars):
     
     return Appointdf
 
-cat_vars=['Hosp Code',
-          'Postcode',  
-          #'Health Service Code',
-          'Clinic Category Code',
-          'Indigenous Status at Apppointment',
-          'Account Type',
-          'DayOfWeekShort',
-          #'MonthNameShort',
-          'Gender', 
-          'Source Appointment Reason']
+
+# In[ ]:
+
+
+from  sklearn.preprocessing import LabelBinarizer
+
+class MultiColumnLabelBin(LabelBinarizer):
+    """
+    Wraps sklearn LabelEncoder functionality for use on multiple columns of a
+    pandas dataframe.
+
+    """
+    def __init__(self, columns=None):
+        self.columns = columns
+        self.all_encoders_ = {}
+        self.all_classes_ = {}
+
+    def fit(self, dframe):
+        """
+        Fit label encoder to pandas columns.
+
+        Access individual column classes via indexig `self.all_classes_`
+
+        Access individual column encoders via indexing
+        `self.all_encoders_`
+        """
+        # if columns are provided, iterate through and get `classes_`
+        
+        if self.columns is not None:
+            # ndarray to hold LabelEncoder().classes_ for each
+            # column; should match the shape of specified `columns`
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape,dtype=object)
+            #self.all_encoders_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            for idx, column in enumerate(self.columns):
+                print("column {}".format( column ) )
+                # fit LabelEncoder to get `classes_` for the column
+                le = LabelBinarizer()
+                le = le.fit(dframe.loc[:, column].astype(str).fillna('NA_VAL').values)
+                # append the `classes_` to our ndarray container
+                self.all_classes_[column] = le.classes_
+                
+                # append this column's encoder
+                self.all_encoders_[column] = le
+                #print("dframe.loc[:, column].values {}".format(dframe.loc[:, column].values ) )
+                print("self.all_encoders_[column]classes_.tolist() {}".format(self.all_encoders_[column].classes_.tolist()) )
+                
+        return self
+
+    def fit_transform(self, dframe):
+        """
+        Fit label encoder and return encoded labels.
+
+        Access individual column classes via indexing
+        `self.all_classes_`
+
+        Access individual column encoders via indexing
+        `self.all_encoders_`
+
+        Access individual column encoded labels via indexing
+        `self.all_labels_`
+        """
+        # if columns are provided, iterate through and get `classes_`
+        if self.columns is not None:
+            print("self.columns {}".format(self.columns))
+            # ndarray to hold LabelEncoder().classes_ for each
+            # column; should match the shape of specified `columns`
+            #self.all_classes_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            self.all_classes_ = {}
+            #self.all_encoders_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            self.all_encoders_ = {}
+            #self.all_labels_ = np.ndarray(shape=self.columns.shape, dtype=object)
+            for idx, column in enumerate(self.columns):
+                # instantiate LabelEncoder
+                le = LabelBinarizer()
+                # fit and transform labels in the column
+                dframe.loc[:, column] = le.fit_transform(dframe.loc[:, column].astype(str).fillna('NA_VAL'))
+                # append the `classes_` to our ndarray container
+                self.all_classes_[column] = le.classes_
+                self.all_encoders_[column] = le
+                self.all_labels_[column] = le
+        return dframe
+
+    def transform(self, dframe):
+        """
+        Transform labels to normalized encoding.
+        """
+        print("self.all_encoders_ {}".format(self.all_encoders_))
+        if self.columns is not None:
+            print("self.columns {}".format(self.columns))
+            for idx, column in enumerate(self.columns):
+                print("idx {}, column {}".format(idx, column))
+                #print(self.all_encoders_[column].transform(dframe.loc[:, column].values))
+                lb_results = self.all_encoders_[column].transform(dframe.loc[:, column].astype(str).fillna('NA_VAL').values)
+                dfOneHot = pd.DataFrame(lb_results, columns=self.all_classes_[column] )
+                dframe = pd.concat([dframe, dfOneHot], axis=1)
+                dframe.drop(columns=[column], inplace=True)
+        return dframe
+
+    def inverse_transform(self, dframe):
+        """
+        Transform labels back to original encoding.
+        """
+        if self.columns is not None:
+            for idx, column in enumerate(self.columns):
+                dframe.loc[:, column] = self.all_encoders_[column]                    .inverse_transform(dframe.loc[:, column].values)
+        return dframe
+    
 
 
 # In[ ]:
 
 
-print("Dummyfing data")
-print("............................................")
-AppointdfNonDummy = Appointdf
+cat_vars=[
+        'Hosp Code', 
+        'SourceAppointmentTypeCode',
+        #'Clinic Category Code', 
+        'ClinicType', 
+        'SpecialtyCode', 
+        'Time of Slot',
+        'Appointment Reason Code', 
+        'Indigenous Status at Apppointment',
+       'AccountTypeCode', 
+       'IsFirstNonCancelledAppointment',
+       'Is Interpreter Required', 
+        'DayOfWeekShort', 
+        'MonthNameShort',
+       'Postcode', 
+        'Gender', 
+        'AHSCode',
+       'RemotenessCode', 
+        'T2CODE']
 
+
+mcle = MultiColumnLabelEncoder(columns=cat_vars)
+mcle = MultiColumnLabelBin(columns=cat_vars)
 
 
 # In[ ]:
+
+
+mcle = mcle.fit(Appointdf)
+
+
+# In[ ]:
+
 
 
 print(AppointdfNonDummy.dtypes)
@@ -438,7 +748,40 @@ print(AppointdfNonDummy.Postcode.unique())
 print(len((AppointdfNonDummy.columns)))
 print(len(set(AppointdfNonDummy.columns)))
 
-Appointdf = Dummify(Appointdf=AppointdfNonDummy, cat_vars=cat_vars)
+#Appointdf = Dummify(Appointdf=AppointdfNonDummy, cat_vars=cat_vars)
+# transform the `df` data
+Appointdft = mcle.transform(Appointdf)
+
+
+# In[ ]:
+
+
+Appointdft.shape
+Appointdft.head()
+
+
+# In[ ]:
+
+
+print(Appointdft.head())
+print(sum(Appointdft.isnull().sum()))
+
+
+# In[ ]:
+
+
+print(Appointdft['SourceAppointmentTypeCode'])
+
+
+# In[ ]:
+
+
+del AppointdfNonDummy
+
+
+# In[ ]:
+
+
 print(len((Appointdf.columns)))
 print(len(set(Appointdf.columns)))
 
@@ -446,24 +789,10 @@ print(len(set(Appointdf.columns)))
 # In[ ]:
 
 
-print(sum(Appointdf.isnull().sum()))
-print(Appointdf.head())
-
-
-# In[ ]:
-
-
-print(len((Appointdf.columns)))
-print(len(set(Appointdf.columns)))
-
-
-# In[ ]:
-
-
-#for c in sorted(Appointdf.columns): 
-#    print(c)
+for c in sorted(Appointdf.columns): 
+    print(c)
     
-#print((set(Appointdf.columns)))
+print((set(Appointdf.columns)))
 
 
 # In[ ]:
@@ -478,14 +807,20 @@ print(len(set(Appointdf.columns)))
 
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-Appointdf[Appointdf.columns] = scaler.fit_transform(Appointdf)
-
-X_train, X_test, y_train, y_test = train_test_split( Appointdf,  Y,  test_size=0.30,  random_state=61) 
+#Appointdf[Appointdf.columns] = scaler.fit_transform(Appointdf)
 
 
 # In[ ]:
 
 
+#X_train, X_test, y_train, y_test = train_test_split( Appointdf,  Y,  test_size=0.30,  random_state=61) 
+
+
+# In[ ]:
+
+
+X_train=Appointdf
+X_test=Appointdf
 print("X_train: : {}".format(X_train.shape))
 print("X_test: {}".format(X_test.shape))
 print("Null: {}".format(Appointdf.isnull().sum()))
@@ -503,7 +838,7 @@ print("Null: {}".format(Appointdf.isnull().sum()))
 
 
 clf = None
-clf = RandomForestClassifier(min_samples_split=30, min_samples_leaf=3,n_estimators=350, n_jobs=12)
+clf = RandomForestClassifier(max_depth=6, min_samples_split=50, min_samples_leaf=15, n_estimators=271, n_jobs=11)
 
 #del clf
 #clf = RandomForestClassifier(n_jobs=2, n_estimators=7,class_weight ='balanced')
@@ -518,9 +853,11 @@ from sklearn.metrics import recall_score
 scoring = {'roc_auc': 'roc_auc',
             'rec_micro': make_scorer(recall_score, average=None)}
 
-scoring = ('roc_auc', 'recall')
+scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
 
-scores = cross_validate(clf, Appointdf,  Y, scoring=None, cv=5, return_train_score=False)
+print("CROSS VALIDATE  Random forest")
+scores = cross_validate(clf, Appointdf,  Y, scoring=scoring, cv=2, return_train_score=True)
+print("Train Random forest")
 clf.fit(Appointdf,  Y)
 print(scores)    
 
@@ -533,11 +870,13 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.scorer import make_scorer
 from sklearn.metrics import recall_score
 from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn import svm
+svmclf = svm.SVC()
 from sklearn.gaussian_process.kernels import RBF
-gp_opt = GaussianProcessClassifier(kernel=100.0 * RBF())
+#gp_opt = GaussianProcessClassifier(kernel=100.0 * RBF(), copy_X_train=False)
 
 #scores = cross_validate(gp_opt, Appointdf,  Y, scoring=None, cv=1, return_train_score=False)
-#gp_opt.fit(Appointdf, Y)
+#svmclf.fit(Appointdf, Y)
 #print(scores)    
 
 
@@ -550,12 +889,26 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.scorer import make_scorer
 from sklearn.metrics import recall_score
 
-logreg = linear_model.LogisticRegression(C=2, penalty='l2')
+logreg = linear_model.LogisticRegression(C=0.08, penalty='l1')
 scoring = ('roc_auc', 'recall')
-
-scores = cross_validate(logreg, Appointdf, Y, scoring=None, cv=2, return_train_score=False)
+scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
+scores = cross_validate(logreg, Appointdf, Y, scoring=scoring, cv=2, return_train_score=False)
 logreg.fit(Appointdf,  Y)
 print(scores)    
+
+
+# In[ ]:
+
+
+print(xpath)
+
+
+# In[ ]:
+
+
+from sklearn.externals import joblib
+joblib.dump(clf, xpath + '/RF_JL20132018.pkl') 
+joblib.dump(logreg, xpath + '/LR_JL20132018.pkl') 
 
 
 # In[ ]:
@@ -576,8 +929,8 @@ from sklearn.metrics import recall_score
 scoring = {'prec_micro': 'precision_micro',
             'rec_micro': make_scorer(recall_score, average='micro')}
 scoring = ('roc_auc', 'recall')
-scores = cross_validate(clsb, Appointdf,  Y, scoring=scoring, cv=2, return_train_score=False)
-clsb.fit(Appointdf,  Y)
+#scores = cross_validate(clsb, Appointdf,  Y, scoring=scoring, cv=2, return_train_score=False)
+#clsb.fit(Appointdf,  Y)
 print(scores)    
 
 
@@ -613,7 +966,7 @@ def FeatureImportance(forest,X, fsize=None):
     plt.xlim([-1, fsize])
   plt.show()
 
-FeatureImportance(forest=clf, X=X_train, fsize=150)
+FeatureImportance(forest=clf, X=Appointdf, fsize=150)
 
 clf.feature_importances_
 std = np.std([tree.feature_importances_ for tree in clf.estimators_],
@@ -717,7 +1070,7 @@ print(pd.DataFrame(confusion_matrix(y_test, predictions, labels=unique_label),
 # In[ ]:
 
 
-XtrainEmpty = X_train[0:0]
+XtrainEmpty = Appointdf[0:0]
 
 
 # In[ ]:
@@ -841,7 +1194,7 @@ XtrainEmpty = X_train[0:0]
 # In[ ]:
 
 
-futureDataO = pd.read_csv(xpath + "/AllAppointments.csv")
+futureDataO = pd.read_csv(xpath + "/Appointments_07Aug2018_10Aug2018.csv")
 #print(futureDataO['Hosp Code'].value_counts())
 FS  = futureDataO['Hosp Code']=='FS' 
 FH = futureDataO['Hosp Code']=='FH' 
@@ -861,7 +1214,7 @@ import datetime
 futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
 print("test Data size {}".format(futureData.shape))
 futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
-futureData = futureData[futureData['Date Of Appointment'] >= datetime.date(year=2018,month=7,day=3) ]
+futureData = futureData[futureData['Date Of Appointment'] >= datetime.date(year=2018,month=7,day=21) ]
 print("test after date  Data size {}".format(futureData.shape))
 FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
 
@@ -877,15 +1230,26 @@ print("FutureIDDF cols {}".format(FutureIDDF.columns))
 # In[ ]:
 
 
-futureDatap,Yf= prepareData(Appointdf=futureData)
-futureDatapDummy = Dummify(Appointdf=futureDatap, cat_vars=cat_vars)
+#futureData.Postcode.astype(str).str.contains('No Value', regex=False, na=False)
+#futureData.Postcode.str.contains('No Value', regex=False, na=False)
+#print(futureData.Postcode)
+
+#futureData['Patient Attended'] = 0
+
+
+# In[ ]:
+
+
+futureDatap,Yf=prepareData(Appointdf=futureData)
+#futureDatapDummy = Dummify(Appointdf=futureDatap, cat_vars=cat_vars)
+futureDatapDummy = mcle.transform(futureDatap)
 print("futureDatapDummy {}".format(futureDatapDummy.shape))
 
 
 # In[ ]:
 
 
-XtrainEmpty = X_train[0:0]
+XtrainEmpty = Appointdf[0:0]
 
 print(XtrainEmpty.shape)
 print(len(XtrainEmpty.columns))
@@ -944,8 +1308,10 @@ futureDatapDummy.head(1)
 
 predictions_Future = clf.predict(futureDatapDummy)
 predictions_prob_Future = clf.predict_proba(futureDatapDummy)
-predxgs_Future = clsb.predict(futureDatapDummy)
-predxgs_prob_Future = clsb.predict_proba(futureDatapDummy)
+#predxgs_Future = clsb.predict(futureDatapDummy)
+#predxgs_prob_Future = clsb.predict_proba(futureDatapDummy)
+predxgs_Future = logreg.predict(futureDatapDummy)
+predxgs_prob_Future = logreg.predict_proba(futureDatapDummy)
 print(clf.classes_)
 
 
@@ -953,12 +1319,11 @@ print(clf.classes_)
 
 
 
-predictions_Future = logreg.predict(futureDatapDummy)
-predictions_prob_Future = logreg.predict_proba(futureDatapDummy)
-predxgs_Future = logreg.predict(futureDatapDummy)
-predxgs_prob_Future = logreg.predict_proba(futureDatapDummy)
-
-print(logreg.classes_)
+#predictions_Future = logreg.predict(futureDatapDummy)
+#predictions_prob_Future = logreg.predict_proba(futureDatapDummy)
+#predxgs_Future = logreg.predict(futureDatapDummy)
+#predxgs_prob_Future = logreg.predict_proba(futureDatapDummy)
+#print(logreg.classes_)
 
 
 # In[ ]:
@@ -1027,26 +1392,26 @@ print(FutureIDDF.dtypes)
 # In[ ]:
 
 
-outcomerph = pd.read_csv(xpath + "OutcomeRPHJuly2018.csv")
+outcomerph = pd.read_csv(xpath + "Appointments_01Aug2018_07Aug2018.csv")
 
 
 # In[ ]:
 
 
 outcomerph.columns
-outcomerph=outcomerph.rename(columns = {'(No column name)':'SourceStatus'})
+outcomerph=outcomerph.rename(columns = {'Patient Attended':'SourceStatus'})
 
 
 # In[ ]:
 
 
-pred_out = pd.merge(futureData, outcomerph, left_on=['Appointment ID'], right_on=['AppointmentID'] )
+pred_out = pd.merge(futureData, outcomerph, left_on=['Appointment ID'], right_on=['Appointment ID'] )
 
 
 # In[ ]:
 
 
-pred_outResult =  pd.merge(pred_out, FutureIDDF, left_on=['Appointment ID'], right_on=['Appointment ID'] ) 
+pred_outResult =  pd.merge(outcomerph, FutureIDDF, left_on=['Appointment ID'], right_on=['Appointment ID'], how ='inner' ) 
 
 print(pred_outResult.head())
 
@@ -1054,7 +1419,15 @@ print(pred_outResult.head())
 # In[ ]:
 
 
-pd.crosstab(pred_outResult['Attend'], pred_outResult['SourceStatus'])
+print(futureData.columns)
+
+pd.crosstab(FutureIDDF['Attend'], futureData['Patient Attended'])
+
+
+# In[ ]:
+
+
+pd.crosstab(FutureIDDF['AttendB'], futureData['Patient Attended'])
 
 
 # In[ ]:
