@@ -32,7 +32,7 @@ from sklearn.model_selection import train_test_split
 
 xpath = "/home/he159490/DS/OUT/"
 xpath = "/media/DataDrive/"
-AppointCSV = "Appointments_01Aug2015_06Aug2018.csv"
+AppointCSV = "Appointments_10Aug2016_10Aug2018.csv"
 
 
 # In[4]:
@@ -114,7 +114,7 @@ def print_evaluation_scores(y_val, predicted):
 print(xpath + AppointCSV)
 
 
-# In[ ]:
+# In[7]:
 
 
 
@@ -123,13 +123,13 @@ AppointdfO = pd.read_csv(xpath + AppointCSV)
 #AppointdfO = pd.read_csv(xpath + "/Appointments_07Aug2018_10Aug2018.csv")
 
 
-# In[ ]:
+# In[8]:
 
 
 AppointdfO.shape
 
 
-# In[ ]:
+# In[9]:
 
 
 #print(AppointdfO['Hosp Code'].value_counts())
@@ -139,7 +139,7 @@ AppointdfO.shape
 #print(AppointdfO['Hosp Code'][FS | FH])
 
 
-# In[ ]:
+# In[10]:
 
 
 #AppointdfOFSFH = AppointdfO[FH | FS]
@@ -149,14 +149,14 @@ AppointdfOFSFH = AppointdfO
 print(AppointdfOFSFH['Hosp Code'].value_counts())
 
 
-# In[ ]:
+# In[11]:
 
 
 print(AppointdfOFSFH['Date Of Appointment'].min())
 print(AppointdfOFSFH['Date Of Appointment'].max())
 
 
-# In[ ]:
+# In[12]:
 
 
 AppointdfOFSFH['Date Of Appointment'] = pd.to_datetime(AppointdfOFSFH['Date Of Appointment'])
@@ -165,7 +165,7 @@ print(AppointdfOFSFH['Date Of Appointment'].max())
 from dateutil.relativedelta import relativedelta
 
 
-# In[ ]:
+# In[13]:
 
 
 from dateutil import parser
@@ -175,7 +175,7 @@ print(dtJul)
 print(dtJan)
 
 
-# In[ ]:
+# In[14]:
 
 
 AppointdfOFSFH=AppointdfOFSFH.sort_values('Date Of Appointment').reset_index()
@@ -187,19 +187,19 @@ print(AppointdfOFSFH['Date Of Appointment'].min())
 print(AppointdfOFSFH['Date Of Appointment'].max())
 
 
-# In[ ]:
+# In[15]:
 
 
 print(AppointdfOFSFH.columns)
 
 
-# In[ ]:
+# In[16]:
 
 
 print(AppointdfOFSFH.shape[0])
 
 
-# In[ ]:
+# In[17]:
 
 
 start = AppointdfOFSFH.shape[0]-10000
@@ -208,72 +208,78 @@ print("start {} end {}".format(start,end))
 AppointdfOFSFH.loc[start:end]
 
 
-# In[ ]:
+# In[18]:
 
 
 print(list(AppointdfOFSFH.columns))
 
 
-# In[ ]:
+# In[19]:
 
 
 AppointdfOFSFH.tail()
 
 
-# In[ ]:
+# In[20]:
 
 
 print(AppointdfOFSFH[AppointdfOFSFH['Appointment Reason Code'] == '[No Value]'].count())
 print(AppointdfOFSFH['Appointment Reason Code'].value_counts())
 
 
-# In[ ]:
+# In[21]:
 
 
 mask = AppointdfOFSFH['Appointment Reason Code'] == '[No Value]'
 AppointdfOFSFH['Appointment Reason Code'].loc[mask]  = 'NoVal'
 
 
-# In[ ]:
+# In[22]:
 
 
 mask = AppointdfOFSFH['AccountTypeCode'] == '[No Value]'
 AppointdfOFSFH['AccountTypeCode'].loc[mask]  = 'NoVal'
 
 
-# In[ ]:
+# In[23]:
 
 
 #print(AppointdfOFSFH.replace({r'No Value': 'NoVal'}, regex=True))
 AppointdfOFSFH= AppointdfOFSFH.replace({r'No Value': 'NoVal'}, regex=True)
 
 
-# In[ ]:
+# In[24]:
 
 
 #AppointdfOFSFH.search(r'No Value', regex=True)
 NoValmask = AppointdfOFSFH.applymap(lambda x:  r'No Value' in str(x))
 
 
-# In[ ]:
+# In[25]:
 
 
 np.count_nonzero(NoValmask)
 
 
-# In[ ]:
+# In[26]:
 
 
 print(AppointdfOFSFH['Appointment Reason Code'].value_counts())
 
 
-# In[ ]:
+# In[27]:
 
 
 print(AppointdfOFSFH.columns)
 
 
-# In[ ]:
+# In[28]:
+
+
+print(AppointdfOFSFH.dtypes)
+
+
+# In[29]:
 
 
 def prepareData(Appointdf):
@@ -286,13 +292,13 @@ def prepareData(Appointdf):
         'Date Of Appointment Booked',
        #'Clinic Category Code', 
         'ClinicType', 
-        'SpecialtyCode', 
+        #'SpecialtyCode', 
         'Time of Slot',
        'Appointment Reason Code', 
         'Age', 
         'Indigenous Status at Apppointment',
        'AccountTypeCode', 
-        'IsFirstNonCancelledAppointment',
+       'IsFirstNonCancelledAppointment',
        'Is Interpreter Required', 
         'DayOfWeekShort', 
         'MonthNameShort',
@@ -392,16 +398,17 @@ def prepareData(Appointdf):
     return Appointdf,Y
 
 
-# In[ ]:
+# In[30]:
 
 
 AppointdfOFSFH=AppointdfOFSFH.dropna()
 Appointdf,Y= prepareData(Appointdf=AppointdfOFSFH)
 print(list(Appointdf.columns))
 Appointdf.head(1).to_csv(xpath + "/AppointCSV.csv")
+del AppointdfOFSFH
 
 
-# In[ ]:
+# In[31]:
 
 
 from  sklearn.preprocessing import LabelEncoder
@@ -590,7 +597,7 @@ def Dummify(Appointdf, cat_vars):
     return Appointdf
 
 
-# In[ ]:
+# In[32]:
 
 
 from  sklearn.preprocessing import LabelBinarizer
@@ -629,7 +636,7 @@ class MultiColumnLabelBin(LabelBinarizer):
                 le = le.fit(dframe.loc[:, column].astype(str).fillna('NA_VAL').values)
                 # append the `classes_` to our ndarray container
                 self.all_classes_[column] = le.classes_
-                
+                print(le)
                 # append this column's encoder
                 self.all_encoders_[column] = le
                 #print("dframe.loc[:, column].values {}".format(dframe.loc[:, column].values ) )
@@ -678,13 +685,24 @@ class MultiColumnLabelBin(LabelBinarizer):
         print("self.all_encoders_ {}".format(self.all_encoders_))
         if self.columns is not None:
             print("self.columns {}".format(self.columns))
+            dfOneHotList = [dframe]
+            colList = []
             for idx, column in enumerate(self.columns):
                 print("idx {}, column {}".format(idx, column))
                 #print(self.all_encoders_[column].transform(dframe.loc[:, column].values))
                 lb_results = self.all_encoders_[column].transform(dframe.loc[:, column].astype(str).fillna('NA_VAL').values)
-                dfOneHot = pd.DataFrame(lb_results, columns=self.all_classes_[column] )
-                dframe = pd.concat([dframe, dfOneHot], axis=1)
-                dframe.drop(columns=[column], inplace=True)
+                if len(mcle.all_classes_[column]) == 2:
+                    dfOneHot = pd.DataFrame(lb_results, columns=[column] )
+                else:
+                    xcolumns = [ column + "_" + c.strip().replace("/","_").replace("(","_").replace(")","_").replace(" ","_").replace("[","_").replace("]","_").replace(".","_").replace(r"\\t","_").replace(r"\\n","_") for c in self.all_classes_[column].tolist()]
+                    print("xcolumns {}".format(xcolumns))
+                    dfOneHot = pd.DataFrame(lb_results, columns=xcolumns )
+                    
+                dfOneHotList.append(dfOneHot)
+                colList.append(column)
+            dframe = pd.concat(dfOneHotList, axis=1)
+            #self.columns.tolist()
+            dframe.drop(columns=colList, inplace=True)
         return dframe
 
     def inverse_transform(self, dframe):
@@ -698,7 +716,7 @@ class MultiColumnLabelBin(LabelBinarizer):
     
 
 
-# In[ ]:
+# In[33]:
 
 
 cat_vars=[
@@ -706,13 +724,13 @@ cat_vars=[
         'SourceAppointmentTypeCode',
         #'Clinic Category Code', 
         'ClinicType', 
-        'SpecialtyCode', 
+        #'SpecialtyCode', 
         'Time of Slot',
         'Appointment Reason Code', 
         'Indigenous Status at Apppointment',
        'AccountTypeCode', 
-       'IsFirstNonCancelledAppointment',
-       'Is Interpreter Required', 
+       #'IsFirstNonCancelledAppointment',
+       #'Is Interpreter Required', 
         'DayOfWeekShort', 
         'MonthNameShort',
        'Postcode', 
@@ -726,23 +744,38 @@ mcle = MultiColumnLabelEncoder(columns=cat_vars)
 mcle = MultiColumnLabelBin(columns=cat_vars)
 
 
-# In[ ]:
+# In[34]:
+
+
+#print(len(mcle.all_classes_['Is Interpreter Required']))
+#le = mcle.all_encoders_['Is Interpreter Required']
+#print(le)
+#print(le.classes_)
+
+
+# In[35]:
+
+
+#print(mcle.all_encoders_[ 'Is Interpreter Required' ].transform(Appointdf.loc[:, 'Is Interpreter Required'].astype(str).fillna('NA_VAL').values))
+
+
+# In[36]:
 
 
 mcle = mcle.fit(Appointdf)
 
 
-# In[ ]:
+# In[37]:
 
 
-
+AppointdfNonDummy=Appointdf
 print(AppointdfNonDummy.dtypes)
 print(AppointdfNonDummy.Postcode.unique())
 print(AppointdfNonDummy.dtypes)
 print(AppointdfNonDummy.Postcode.unique())
 
 
-# In[ ]:
+# In[38]:
 
 
 print(len((AppointdfNonDummy.columns)))
@@ -753,56 +786,62 @@ print(len(set(AppointdfNonDummy.columns)))
 Appointdft = mcle.transform(Appointdf)
 
 
-# In[ ]:
+# In[39]:
 
 
 Appointdft.shape
 Appointdft.head()
 
 
-# In[ ]:
+# In[40]:
+
+
+Appointdft.dtypes
+
+
+# In[41]:
 
 
 print(Appointdft.head())
 print(sum(Appointdft.isnull().sum()))
 
 
-# In[ ]:
+# In[42]:
 
 
-print(Appointdft['SourceAppointmentTypeCode'])
+#print(Appointdft['SourceAppointmentTypeCode'])
 
 
-# In[ ]:
+# In[43]:
 
 
-del AppointdfNonDummy
+#del AppointdfNonDummy
 
 
-# In[ ]:
+# In[44]:
 
 
-print(len((Appointdf.columns)))
-print(len(set(Appointdf.columns)))
+print(len((Appointdft.columns)))
+print(len(set(Appointdft.columns)))
 
 
-# In[ ]:
+# In[45]:
 
 
-for c in sorted(Appointdf.columns): 
+for c in sorted(Appointdft.columns): 
     print(c)
     
-print((set(Appointdf.columns)))
+print((set(Appointdft.columns)))
 
 
-# In[ ]:
+# In[46]:
 
 
 #for c in sorted(set(Appointdf.columns)): 
 #    print(c)
 
 
-# In[ ]:
+# In[47]:
 
 
 from sklearn.preprocessing import StandardScaler
@@ -810,20 +849,31 @@ scaler = StandardScaler()
 #Appointdf[Appointdf.columns] = scaler.fit_transform(Appointdf)
 
 
-# In[ ]:
+# In[48]:
 
 
 #X_train, X_test, y_train, y_test = train_test_split( Appointdf,  Y,  test_size=0.30,  random_state=61) 
 
 
-# In[ ]:
+# In[52]:
 
 
-X_train=Appointdf
-X_test=Appointdf
+X_train=Appointdft
+X_test=Appointdft
+Appointdf = Appointdft
 print("X_train: : {}".format(X_train.shape))
 print("X_test: {}".format(X_test.shape))
-print("Null: {}".format(Appointdf.isnull().sum()))
+print("Null: {}".format(Appointdft.isnull().sum()))
+
+
+# In[59]:
+
+
+print(pd.options.display.max_columns)
+print(pd.options.display.max_rows)
+pd.options.display.max_columns=1200
+pd.options.display.max_rows=1200
+Appointdft.head(5)
 
 
 # In[ ]:
@@ -831,9 +881,32 @@ print("Null: {}".format(Appointdf.isnull().sum()))
 
 #for c in X_train.columns:
 #   print(c)
+#AppointmentSequence	Age	IsFirstNonCancelledAppointment	Is Interpreter Required	MinTemp	MaxTemp	rainfall	SEIFAStatePercentile	PriorAttendanceRate	Appoint_Book_Length
+Appointdft['AppointmentSequence'].fillna((Appointdft['AppointmentSequence'].mean()), inplace=True)
+print('AppointmentSequence')
+Appointdft['Age'].fillna( Appointdft['Age'].mean() , inplace=True)
+print('Age')
+Appointdft['IsFirstNonCancelledAppointment'].fillna( 0 , inplace=True)
+print('IsFirstNonCancelledAppointment')
+Appointdft['Is Interpreter Required'].fillna(0, inplace=True)
+print('Is Interpreter Required')
+Appointdft['MinTemp'].fillna((Appointdft['MinTemp'].mean()), inplace=True)
+print('MinTemp')
+Appointdft['MaxTemp'].fillna((Appointdft['MaxTemp'].mean()), inplace=True)
+print('MaxTemp')
+Appointdft['rainfall'].fillna( 0, inplace=True)
+print('rainfall')
+Appointdft['SEIFAStatePercentile'].fillna( (Appointdft['SEIFAStatePercentile'].mean()), inplace=True)
+print('SEIFAStatePercentile')
+Appointdft['PriorAttendanceRate'].fillna((Appointdft['PriorAttendanceRate'].mean()), inplace=True)
+print('PriorAttendanceRate')
+Appointdft['Appoint_Book_Length'].fillna( (Appointdft['Appoint_Book_Length'].mean() ), inplace=True)
+print('Appoint_Book_Length')
+
+print("Null: {}".format(Appointdft.isnull().sum(axis=0)))
 
 
-# In[ ]:
+# In[51]:
 
 
 
@@ -856,10 +929,10 @@ scoring = {'roc_auc': 'roc_auc',
 scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
 
 print("CROSS VALIDATE  Random forest")
-scores = cross_validate(clf, Appointdf,  Y, scoring=scoring, cv=2, return_train_score=True)
+scores = cross_validate(clf, Appointdft,  Y, scoring=scoring, cv=2, return_train_score=True)
 print("Train Random forest")
-clf.fit(Appointdf,  Y)
-print(scores)    
+clf.fit(Appointdft,  Y)
+print(scores)
 
 
 # In[ ]:
