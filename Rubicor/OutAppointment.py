@@ -279,7 +279,7 @@ print(AppointdfOFSFH.columns)
 print(AppointdfOFSFH.dtypes)
 
 
-# In[29]:
+# In[106]:
 
 
 def prepareData(Appointdf):
@@ -324,6 +324,13 @@ def prepareData(Appointdf):
     Appointdf["Appoint_Book_Length"] = Appointdf["Appoint_Book_Length"].dt.total_seconds()/ 3600 
     Appointdf = Appointdf.drop(columns=["Date Of Appointment", 'Date Of Appointment Booked', ])
 
+    mask = Appointdf['Appointment Reason Code'] == '[No Value]'
+    Appointdf['Appointment Reason Code'].loc[mask]  = 'NoVal'
+    mask = Appointdf['AccountTypeCode'] == '[No Value]'
+    Appointdf['AccountTypeCode'].loc[mask]  = 'NoVal'
+    Appointdf= Appointdf.replace({r'No Value': 'NoVal'}, regex=True)
+    NoValmask = Appointdf.applymap(lambda x:  r'No Value' in str(x))
+    
     print("")
     print("............................................")
 
@@ -876,7 +883,7 @@ pd.options.display.max_rows=1200
 Appointdft.head(5)
 
 
-# In[ ]:
+# In[61]:
 
 
 #for c in X_train.columns:
@@ -906,12 +913,31 @@ print('Appoint_Book_Length')
 print("Null: {}".format(Appointdft.isnull().sum(axis=0)))
 
 
-# In[51]:
+# In[62]:
 
+
+#Appointdft.fillna( 0 , inplace=True)
+Appointdft[Appointdft.isnull().any(axis=1)].head()
+
+
+# In[63]:
+
+
+Appointdft.dropna(inplace=True)
+
+
+# In[66]:
+
+
+print(Appointdft.shape)
+print(Y.shape)
+
+
+# In[139]:
 
 
 clf = None
-clf = RandomForestClassifier(max_depth=6, min_samples_split=50, min_samples_leaf=15, n_estimators=271, n_jobs=11)
+clf = RandomForestClassifier(max_depth=6, min_samples_split=50, min_samples_leaf=31, n_estimators=271, n_jobs=11)
 
 #del clf
 #clf = RandomForestClassifier(n_jobs=2, n_estimators=7,class_weight ='balanced')
@@ -935,7 +961,7 @@ clf.fit(Appointdft,  Y)
 print(scores)
 
 
-# In[ ]:
+# In[140]:
 
 
 from sklearn.model_selection import cross_val_score
@@ -962,8 +988,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.scorer import make_scorer
 from sklearn.metrics import recall_score
 
-logreg = linear_model.LogisticRegression(C=0.08, penalty='l1')
-scoring = ('roc_auc', 'recall')
+logreg = linear_model.LogisticRegression(C=0.8, penalty='l1')
 scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
 scores = cross_validate(logreg, Appointdf, Y, scoring=scoring, cv=2, return_train_score=False)
 logreg.fit(Appointdf,  Y)
@@ -1080,8 +1105,39 @@ print("confMatrix {}".format(confMatrix))
 # In[ ]:
 
 
+print(Y.value_counts())
+ser = pd.Series(predictions)
+print(ser.value_counts())
+
 print(X_train.shape)
 print(X_test.shape)
+
+
+# In[ ]:
+
+
+# Predict 
+lpredictions = logreg.predict(X_test)
+lpredictions_prob = logreg.predict_proba(X_test)
+#predxgs = clsb.predict(X_test)
+#predxgs_prob = clsb.predict_proba(X_test)
+print("evaluate ....")
+print_evaluation_scores_multi_class(y_val=y_test, predicted=lpredictions)
+#print_evaluation_scores_multi_class(y_val=y_test, predicted=predxgs)
+print("confusion matrix ....")
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+confMatrix = pd.crosstab(y_test, lpredictions, rownames=['True'], colnames=['Predicted'], margins=True)
+#confMatrixXB = pd.crosstab(y_test, predxgs, rownames=['True'], colnames=['Predicted'], margins=True)
+
+print("confMatrix {}".format(confMatrix))
+#print("confMatrixXB {}".format( confMatrixXB))
+
+#confMatrixPercent = pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted']).apply(lambda r: 100.0 * r/r.sum())
+#print("confMatrixPercent {}".format( confMatrixPercent))
+print(Y.value_counts())
+ser = pd.Series(lpredictions)
+print(ser.value_counts())
 
 
 # In[ ]:
@@ -1090,13 +1146,24 @@ print(X_test.shape)
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 unique_label = np.unique(y_test)
-print(pd.DataFrame(confusion_matrix(y_test, predictions, labels=unique_label), 
+print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
                    index=['true:{:}'.format(x) for x in unique_label], 
                    columns=['pred:{:}'.format(x) for x in unique_label]))
 
 
 # In[ ]:
 
+
+
+#FeatureImportance(forest=logreg, X=Appointdf, fsize=150)
+sorted_index = np.argsort(logreg.coef_[0])
+#[::-1]
+#print(sorted_index[:10])
+coef = logreg.coef_[0]
+print(coef[sorted_index[0:10]])
+print(X_train.columns[sorted_index[0:10]])
+
+#top_three = np.argpartition(coefs, -3)[-3:]
 
 #testData = pd.read_csv(xpath + AppointCSV)
 #print(testData.shape)
@@ -1267,7 +1334,7 @@ XtrainEmpty = Appointdf[0:0]
 # In[ ]:
 
 
-futureDataO = pd.read_csv(xpath + "/Appointments_07Aug2018_10Aug2018.csv")
+futureDataO = pd.read_csv(xpath + "/Appointments_10Aug2018_15Aug2018.csv")
 #print(futureDataO['Hosp Code'].value_counts())
 FS  = futureDataO['Hosp Code']=='FS' 
 FH = futureDataO['Hosp Code']=='FH' 
@@ -1278,6 +1345,7 @@ futureData = futureDataO
 #futureData=futureData.dropna()
 print(futureData.shape)
 print(futureData.head(2))
+futureData.dropna(inplace=True)
 
 
 # In[ ]:
@@ -1318,50 +1386,75 @@ futureDatap,Yf=prepareData(Appointdf=futureData)
 futureDatapDummy = mcle.transform(futureDatap)
 print("futureDatapDummy {}".format(futureDatapDummy.shape))
 
+futureDatapDummy['AppointmentSequence'].fillna((Appointdft['AppointmentSequence'].mean()), inplace=True)
+print('AppointmentSequence')
+futureDatapDummy['Age'].fillna( Appointdft['Age'].mean() , inplace=True)
+print('Age')
+futureDatapDummy['IsFirstNonCancelledAppointment'].fillna( 0 , inplace=True)
+print('IsFirstNonCancelledAppointment')
+futureDatapDummy['Is Interpreter Required'].fillna(0, inplace=True)
+print('Is Interpreter Required')
+futureDatapDummy['MinTemp'].fillna((Appointdft['MinTemp'].mean()), inplace=True)
+print('MinTemp')
+futureDatapDummy['MaxTemp'].fillna((Appointdft['MaxTemp'].mean()), inplace=True)
+print('MaxTemp')
+futureDatapDummy['rainfall'].fillna( 0, inplace=True)
+print('rainfall')
+futureDatapDummy['SEIFAStatePercentile'].fillna( (Appointdft['SEIFAStatePercentile'].mean()), inplace=True)
+print('SEIFAStatePercentile')
+futureDatapDummy['PriorAttendanceRate'].fillna((Appointdft['PriorAttendanceRate'].mean()), inplace=True)
+print('PriorAttendanceRate')
+futureDatapDummy['Appoint_Book_Length'].fillna( (Appointdft['Appoint_Book_Length'].mean() ), inplace=True)
+print('Appoint_Book_Length')
+
+print("Null: {}".format(Appointdft.isnull().sum(axis=0)))
+
+futureDatapDummy.dropna(inplace=True)
+
+
 
 # In[ ]:
 
 
-XtrainEmpty = Appointdf[0:0]
-
-print(XtrainEmpty.shape)
-print(len(XtrainEmpty.columns))
-print(len(set(XtrainEmpty.columns)))
-print((XtrainEmpty.columns))
+#XtrainEmpty = Appointdf[0:0]
+#print(XtrainEmpty.shape)
+#print(len(XtrainEmpty.columns))
+#print(len(set(XtrainEmpty.columns)))
+#print((XtrainEmpty.columns))
 
 
 # In[ ]:
 
 
-print("concat columns futureDatapDummy {}".format(futureDatapDummy.shape))
-frames=[XtrainEmpty, futureDatapDummy]
-XtrainEmpty_cols = set(XtrainEmpty.columns) 
-print("XtrainEmpty_cols {}" .format(len(XtrainEmpty_cols)))
-futureDatapDummy_cols = set(futureDatapDummy.columns)
-comm_cols = XtrainEmpty_cols.intersection(futureDatapDummy_cols)
-print(len(comm_cols))
+#print("concat columns futureDatapDummy {}".format(futureDatapDummy.shape))
+#frames=[XtrainEmpty, futureDatapDummy]
+#XtrainEmpty_cols = set(XtrainEmpty.columns) 
+#print("XtrainEmpty_cols {}" .format(len(XtrainEmpty_cols)))
+#futureDatapDummy_cols = set(futureDatapDummy.columns)
+#comm_cols = XtrainEmpty_cols.intersection(futureDatapDummy_cols)
+#print(len(comm_cols))
 
 
 # In[ ]:
 
 
 #futureDatapDummy = pd.concat([df[common_cols] for df in frames], ignore_index=True, sort=False)
-print(futureDatapDummy.shape)
-futureDatapDummy = futureDatapDummy[list(comm_cols)]
-futureDatapDummy = pd.concat([XtrainEmpty,futureDatapDummy])
-print(futureDatapDummy.shape)
+#print(futureDatapDummy.shape)
+#futureDatapDummy = futureDatapDummy[list(comm_cols)]
+#futureDatapDummy = pd.concat([XtrainEmpty,futureDatapDummy])
+#print(futureDatapDummy.shape)
 
 
 # In[ ]:
 
 
-print(len(XtrainEmpty_cols))
-print(len(comm_cols))
-print(len(set(XtrainEmpty_cols - comm_cols)))
+#print(len(XtrainEmpty_cols))
+#print(len(comm_cols))
+#print(len(set(XtrainEmpty_cols - comm_cols)))
 
-for ac in list(set(XtrainEmpty_cols - comm_cols)):
-    futureDatapDummy[ac]=0
-print(futureDatapDummy.shape)
+#for ac in list(set(XtrainEmpty_cols - comm_cols)):
+#    futureDatapDummy[ac]=0
+#print(futureDatapDummy.shape)
 
 
 # In[ ]:
@@ -1369,9 +1462,9 @@ print(futureDatapDummy.shape)
 
 print("after concat futureDatapDummy {}".format(futureDatapDummy.shape))
 print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
-NullCols = futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist()
-for c in NullCols:
-    futureDatapDummy[c]=0
+#NullCols = futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist()
+#for c in NullCols:
+#    futureDatapDummy[c]=0
 print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
 futureDatapDummy.head(1)
 
