@@ -279,7 +279,7 @@ print(AppointdfOFSFH.columns)
 print(AppointdfOFSFH.dtypes)
 
 
-# In[106]:
+# In[29]:
 
 
 def prepareData(Appointdf):
@@ -321,7 +321,10 @@ def prepareData(Appointdf):
     Appointdf["Date Of Appointment"] =  pd.to_datetime(Appointdf["Date Of Appointment"])
     Appointdf['Date Of Appointment Booked'] =  pd.to_datetime(Appointdf['Date Of Appointment Booked'])
     Appointdf["Appoint_Book_Length"] = Appointdf["Date Of Appointment"] -  Appointdf['Date Of Appointment Booked']
+    
     Appointdf["Appoint_Book_Length"] = Appointdf["Appoint_Book_Length"].dt.total_seconds()/ 3600 
+    Appointdf.loc[(Appointdf["Appoint_Book_Length"] < -1 ) , ["Appoint_Book_Length"] ] = -1
+    
     Appointdf = Appointdf.drop(columns=["Date Of Appointment", 'Date Of Appointment Booked', ])
 
     mask = Appointdf['Appointment Reason Code'] == '[No Value]'
@@ -862,18 +865,21 @@ scaler = StandardScaler()
 #X_train, X_test, y_train, y_test = train_test_split( Appointdf,  Y,  test_size=0.30,  random_state=61) 
 
 
-# In[52]:
+# In[49]:
 
 
 X_train=Appointdft
 X_test=Appointdft
+y_test=Y
+y_train=Y
+
 Appointdf = Appointdft
 print("X_train: : {}".format(X_train.shape))
 print("X_test: {}".format(X_test.shape))
 print("Null: {}".format(Appointdft.isnull().sum()))
 
 
-# In[59]:
+# In[50]:
 
 
 print(pd.options.display.max_columns)
@@ -883,7 +889,7 @@ pd.options.display.max_rows=1200
 Appointdft.head(5)
 
 
-# In[61]:
+# In[51]:
 
 
 #for c in X_train.columns:
@@ -913,31 +919,38 @@ print('Appoint_Book_Length')
 print("Null: {}".format(Appointdft.isnull().sum(axis=0)))
 
 
-# In[62]:
+# In[52]:
 
 
 #Appointdft.fillna( 0 , inplace=True)
 Appointdft[Appointdft.isnull().any(axis=1)].head()
 
 
-# In[63]:
+# In[53]:
 
 
 Appointdft.dropna(inplace=True)
 
 
-# In[66]:
+# In[54]:
 
 
 print(Appointdft.shape)
 print(Y.shape)
 
 
-# In[139]:
+# In[55]:
 
 
 clf = None
-clf = RandomForestClassifier(max_depth=6, min_samples_split=50, min_samples_leaf=31, n_estimators=271, n_jobs=11)
+clf = RandomForestClassifier(max_depth=15, 
+                             min_samples_split=20, 
+                             min_samples_leaf=11, 
+                             n_estimators=371, 
+                             n_jobs=11,
+                             warm_start=True, 
+                             max_features="sqrt",
+                             oob_score=True)
 
 #del clf
 #clf = RandomForestClassifier(n_jobs=2, n_estimators=7,class_weight ='balanced')
@@ -955,13 +968,13 @@ scoring = {'roc_auc': 'roc_auc',
 scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
 
 print("CROSS VALIDATE  Random forest")
-scores = cross_validate(clf, Appointdft,  Y, scoring=scoring, cv=2, return_train_score=True)
+#scores = cross_validate(clf, Appointdft,  Y, scoring=scoring, cv=2, return_train_score=True)
 print("Train Random forest")
 clf.fit(Appointdft,  Y)
-print(scores)
+#print(scores)
 
 
-# In[140]:
+# In[256]:
 
 
 from sklearn.model_selection import cross_val_score
@@ -969,7 +982,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.scorer import make_scorer
 from sklearn.metrics import recall_score
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn import svm
+from sklearn import svm 
 svmclf = svm.SVC()
 from sklearn.gaussian_process.kernels import RBF
 #gp_opt = GaussianProcessClassifier(kernel=100.0 * RBF(), copy_X_train=False)
@@ -977,9 +990,15 @@ from sklearn.gaussian_process.kernels import RBF
 #scores = cross_validate(gp_opt, Appointdf,  Y, scoring=None, cv=1, return_train_score=False)
 #svmclf.fit(Appointdf, Y)
 #print(scores)    
+from catboost import CatBoostClassifier
+catmodel = CatBoostClassifier(iterations=250, learning_rate=0.7, depth=5, loss_function='Logloss')
+catmodel.fit(Appointdf,  Y)
+# Get predicted classes
+# Get predicted probabilities for each class
+catpreds_proba = catmodel.predict_proba(Appointdf)
 
 
-# In[ ]:
+# In[57]:
 
 
 from sklearn import linear_model
@@ -988,32 +1007,39 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics.scorer import make_scorer
 from sklearn.metrics import recall_score
 
-logreg = linear_model.LogisticRegression(C=0.8, penalty='l1')
+logreg = linear_model.LogisticRegression(C=0.865, penalty='l1')
 scoring = ('roc_auc', 'recall', 'f1', 'accuracy')
 scores = cross_validate(logreg, Appointdf, Y, scoring=scoring, cv=2, return_train_score=False)
 logreg.fit(Appointdf,  Y)
 print(scores)    
 
 
-# In[ ]:
+# In[58]:
 
 
 print(xpath)
 
 
-# In[ ]:
+# In[59]:
 
 
-from sklearn.externals import joblib
-joblib.dump(clf, xpath + '/RF_JL20132018.pkl') 
-joblib.dump(logreg, xpath + '/LR_JL20132018.pkl') 
+#from sklearn.externals import joblib
+#joblib.dump(clf, xpath + '/RF_JL20132018.pkl') 
+#joblib.dump(logreg, xpath + '/LR_JL20132018.pkl') 
+#joblib.dump(logreg, xpath + '/LR_JL20132018.pkl') 
+#catmodel.save_model(xpath + '/CatBoost_JL20132018.pkl', format="cbm", export_parameters=None)
 
 
-# In[ ]:
+# In[60]:
 
 
 from lightgbm import LGBMClassifier
 clsb = LGBMClassifier(objective='binary',num_leaves=31,learning_rate=0.051,n_estimators=151)
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB
+gnb = GaussianNB()
+gnb.fit(Appointdf,  Y)
+
 #print('Feature importances:', list(gbm.feature_importances_))
 print("............................................")
 print("............................................")
@@ -1029,10 +1055,20 @@ scoring = {'prec_micro': 'precision_micro',
 scoring = ('roc_auc', 'recall')
 #scores = cross_validate(clsb, Appointdf,  Y, scoring=scoring, cv=2, return_train_score=False)
 #clsb.fit(Appointdf,  Y)
-print(scores)    
+#print(scores)    
 
 
-# In[ ]:
+# In[61]:
+
+
+from sklearn.externals import joblib
+joblib.dump(clf, xpath + '/RF_JL20132018.pkl') 
+joblib.dump(logreg, xpath + '/LR_JL20132018.pkl') 
+joblib.dump(gnb, xpath + '/NB_JL20132018.pkl') 
+catmodel.save_model(xpath + '/CatBoost_JL20132018.pkl', format="cbm", export_parameters=None)
+
+
+# In[61]:
 
 
 def FeatureImportance(forest,X, fsize=None):
@@ -1078,31 +1114,35 @@ plt.bar(range(10), clf.feature_importances_[indices[:10]],
          color="r", yerr=std[indices[:10]], align="center")
 
 
-# In[ ]:
+# In[259]:
 
 
 # Predict 
+y_train=Y
+y_test=Y
+
 predictions = clf.predict(X_test)
 predictions_prob = clf.predict_proba(X_test)
 #predxgs = clsb.predict(X_test)
+catpreds_class = catmodel.predict(X_test)
 #predxgs_prob = clsb.predict_proba(X_test)
 print("evaluate ....")
 print_evaluation_scores_multi_class(y_val=y_test, predicted=predictions)
-#print_evaluation_scores_multi_class(y_val=y_test, predicted=predxgs)
+print_evaluation_scores_multi_class(y_val=y_test, predicted=catpreds_class)
 print("confusion matrix ....")
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 confMatrix = pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted'], margins=True)
-#confMatrixXB = pd.crosstab(y_test, predxgs, rownames=['True'], colnames=['Predicted'], margins=True)
+confMatrixCAT = pd.crosstab(y_test, catpreds_class, rownames=['True'], colnames=['Predicted'], margins=True)
 
 print("confMatrix {}".format(confMatrix))
-#print("confMatrixXB {}".format( confMatrixXB))
+print("confMatrixCAT {}".format( confMatrixCAT))
 
 #confMatrixPercent = pd.crosstab(y_test, predictions, rownames=['True'], colnames=['Predicted']).apply(lambda r: 100.0 * r/r.sum())
 #print("confMatrixPercent {}".format( confMatrixPercent))
 
 
-# In[ ]:
+# In[63]:
 
 
 print(Y.value_counts())
@@ -1113,7 +1153,7 @@ print(X_train.shape)
 print(X_test.shape)
 
 
-# In[ ]:
+# In[64]:
 
 
 # Predict 
@@ -1140,7 +1180,7 @@ ser = pd.Series(lpredictions)
 print(ser.value_counts())
 
 
-# In[ ]:
+# In[258]:
 
 
 from sklearn.metrics import confusion_matrix
@@ -1151,7 +1191,18 @@ print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label),
                    columns=['pred:{:}'.format(x) for x in unique_label]))
 
 
-# In[ ]:
+# In[65]:
+
+
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+
+# In[66]:
 
 
 
@@ -1169,58 +1220,58 @@ print(X_train.columns[sorted_index[0:10]])
 #print(testData.shape)
 
 
-# In[ ]:
+# In[67]:
 
 
 #testData.head(2)
 
 
-# In[ ]:
+# In[68]:
 
 
 #testData[testData["class_0"].notnull()].head(2) 
 
 
-# In[ ]:
+# In[69]:
 
 
 #testData = testData[testData["class_0"].notnull()] 
 #print("test Data size {}".format(testData.shape))
 
 
-# In[ ]:
+# In[70]:
 
 
 #testDatap,Yt= prepareData(Appointdf=testData)
 
 
-# In[ ]:
+# In[71]:
 
 
 #testDataDummy = Dummify(Appointdf=testDatap, cat_vars=cat_vars)
 
 
-# In[ ]:
+# In[72]:
 
 
 #print(testDataDummy.shape )
 #print(X_train.shape)
 
 
-# In[ ]:
+# In[73]:
 
 
 XtrainEmpty = Appointdf[0:0]
 
 
-# In[ ]:
+# In[74]:
 
 
 #print(XtrainEmpty.shape)
 #print(XtrainEmpty.dtypes)
 
 
-# In[ ]:
+# In[75]:
 
 
 
@@ -1228,13 +1279,13 @@ XtrainEmpty = Appointdf[0:0]
 #resultdf = testDataDummy[list(XtrainEmpty.columns)]
 
 
-# In[ ]:
+# In[76]:
 
 
 #print(resultdf.shape)
 
 
-# In[ ]:
+# In[77]:
 
 
 #print(resultdf.columns[resultdf.isna().any()].tolist())
@@ -1244,13 +1295,13 @@ XtrainEmpty = Appointdf[0:0]
     
 
 
-# In[ ]:
+# In[78]:
 
 
 #print(resultdf.columns[resultdf.isna().any()].tolist())
 
 
-# In[ ]:
+# In[79]:
 
 
 ## Predict 
@@ -1261,7 +1312,7 @@ XtrainEmpty = Appointdf[0:0]
 #predxgs_prob_2weeks = clsb.predict_proba(resultdf)
 
 
-# In[ ]:
+# In[80]:
 
 
 #print("evaluate ....")
@@ -1269,7 +1320,7 @@ XtrainEmpty = Appointdf[0:0]
 #print_evaluation_scores_multi_class(y_val=Yt, predicted=predxgs_2weeks)
 
 
-# In[ ]:
+# In[81]:
 
 
 #print("confusion matrix ....")
@@ -1285,7 +1336,7 @@ XtrainEmpty = Appointdf[0:0]
 #print(confMatrixPercent)
 
 
-# In[ ]:
+# In[82]:
 
 
 #from sklearn.metrics import confusion_matrix
@@ -1296,7 +1347,7 @@ XtrainEmpty = Appointdf[0:0]
 #                   columns=['pred:{:}'.format(x) for x in unique_label]))
 
 
-# In[ ]:
+# In[83]:
 
 
 #predictionsDF = pd.DataFrame(predictions_prob_2weeks, columns=["WillMiss", "WillNotMiss"])
@@ -1304,20 +1355,20 @@ XtrainEmpty = Appointdf[0:0]
 #print(predictionsDF.shape)
 
 
-# In[ ]:
+# In[84]:
 
 
 #resultDF_PredProb = predictionsDF.join(testData)
 
 
-# In[ ]:
+# In[85]:
 
 
 #list(resultDF_PredProb.columns)
 #list(resultdf.columns)
 
 
-# In[ ]:
+# In[86]:
 
 
 #  resultDF = resultDF_PredProb[[
@@ -1331,10 +1382,11 @@ XtrainEmpty = Appointdf[0:0]
     
 
 
-# In[ ]:
+# In[166]:
 
 
-futureDataO = pd.read_csv(xpath + "/Appointments_10Aug2018_15Aug2018.csv")
+futureDataO = pd.read_csv(xpath + "/Appointments_10Aug2018_21Aug2018.csv")
+
 #print(futureDataO['Hosp Code'].value_counts())
 FS  = futureDataO['Hosp Code']=='FS' 
 FH = futureDataO['Hosp Code']=='FH' 
@@ -1348,7 +1400,7 @@ print(futureData.head(2))
 futureData.dropna(inplace=True)
 
 
-# In[ ]:
+# In[167]:
 
 
 import datetime
@@ -1360,7 +1412,7 @@ print("test after date  Data size {}".format(futureData.shape))
 FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
 
 
-# In[ ]:
+# In[168]:
 
 
 FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
@@ -1368,7 +1420,7 @@ print("FutureIDDF size {}".format(FutureIDDF.shape))
 print("FutureIDDF cols {}".format(FutureIDDF.columns))
 
 
-# In[ ]:
+# In[169]:
 
 
 #futureData.Postcode.astype(str).str.contains('No Value', regex=False, na=False)
@@ -1378,7 +1430,7 @@ print("FutureIDDF cols {}".format(FutureIDDF.columns))
 #futureData['Patient Attended'] = 0
 
 
-# In[ ]:
+# In[170]:
 
 
 futureDatap,Yf=prepareData(Appointdf=futureData)
@@ -1413,7 +1465,7 @@ futureDatapDummy.dropna(inplace=True)
 
 
 
-# In[ ]:
+# In[171]:
 
 
 #XtrainEmpty = Appointdf[0:0]
@@ -1423,7 +1475,7 @@ futureDatapDummy.dropna(inplace=True)
 #print((XtrainEmpty.columns))
 
 
-# In[ ]:
+# In[172]:
 
 
 #print("concat columns futureDatapDummy {}".format(futureDatapDummy.shape))
@@ -1435,7 +1487,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(len(comm_cols))
 
 
-# In[ ]:
+# In[173]:
 
 
 #futureDatapDummy = pd.concat([df[common_cols] for df in frames], ignore_index=True, sort=False)
@@ -1445,7 +1497,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(futureDatapDummy.shape)
 
 
-# In[ ]:
+# In[174]:
 
 
 #print(len(XtrainEmpty_cols))
@@ -1457,7 +1509,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(futureDatapDummy.shape)
 
 
-# In[ ]:
+# In[175]:
 
 
 print("after concat futureDatapDummy {}".format(futureDatapDummy.shape))
@@ -1469,7 +1521,7 @@ print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
 futureDatapDummy.head(1)
 
 
-# In[ ]:
+# In[176]:
 
 
 predictions_Future = clf.predict(futureDatapDummy)
@@ -1480,8 +1532,21 @@ predxgs_Future = logreg.predict(futureDatapDummy)
 predxgs_prob_Future = logreg.predict_proba(futureDatapDummy)
 print(clf.classes_)
 
+predNB_Future = logreg.predict(futureDatapDummy)
+predNB_prob_Future = logreg.predict_proba(futureDatapDummy)
 
-# In[ ]:
+predgnb_Future = gnb.predict(futureDatapDummy)
+predgnb_prob_Future = gnb.predict_proba(futureDatapDummy)
+
+
+# In[261]:
+
+
+predcat_Future = catmodel.predict(futureDatapDummy)
+predcat_prob_Future = catmodel.predict_proba(futureDatapDummy)
+
+
+# In[177]:
 
 
 
@@ -1496,28 +1561,37 @@ print(clf.classes_)
 
 
 
-print(predxgs_Future)
-print(predictions_prob_Future)
+print(predcat_Future)
+print(predcat_prob_Future)
 
 print(predxgs_Future.shape)
 print(FutureIDDF.shape)
 
 
-# In[ ]:
+# In[262]:
 
 
 predictionsFutureDF = pd.DataFrame(predictions_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
 predictionsFutureDFB = pd.DataFrame(predxgs_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+predictionsFutureDFNB = pd.DataFrame(predgnb_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+
+predictionsFutureDFcat = pd.DataFrame(predcat_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+
 print(FutureIDDF.shape)
 print(predictions_Future.shape)
 
 FutureIDDF = FutureIDDF.assign(Attend=predictions_Future)  
 FutureIDDF = FutureIDDF.assign(AttendB=predxgs_Future)  
+FutureIDDF = FutureIDDF.assign(AttendNB=predgnb_Future)  
+FutureIDDF = FutureIDDF.assign(Attendcat=predcat_Future)
+
 FutureIDDF = FutureIDDF.assign(MissProb=predictionsFutureDF["WillMissProb"].values)
 FutureIDDF = FutureIDDF.assign(MissProbB=predictionsFutureDFB["WillMissProb"].values)
+FutureIDDF = FutureIDDF.assign(MissProbNB=predictionsFutureDFNB["WillMissProb"].values)
+FutureIDDF = FutureIDDF.assign(MissProbcat=predictionsFutureDFcat["WillMissProb"].values)
 
 
-# In[ ]:
+# In[180]:
 
 
 #FutureDF_PredProb = predictionsFutureDF.join(FutureIDDF)
@@ -1527,15 +1601,17 @@ print(predictionsFutureDF.shape)
 print(predictionsFutureDFB.shape)
 
 
-# In[ ]:
+# In[263]:
 
 
 FutureIDDF.to_csv(xpath + "/PredictionJuly2018.csv",index=True, header=True, na_rep="NA")
 predictionsFutureDF.to_csv(xpath + "/ProbsJuly2018.csv",index=True, header=True, na_rep="NA")
 predictionsFutureDFB.to_csv(xpath + "/ProbsJuly2018B.csv",index=True, header=True, na_rep="NA")
+predictionsFutureDFNB.to_csv(xpath + "/ProbsJuly2018NB.csv",index=True, header=True, na_rep="NA")
+predictionsFutureDFcat.to_csv(xpath + "/ProbsJuly2018cat.csv",index=True, header=True, na_rep="NA")
 
 
-# In[ ]:
+# In[264]:
 
 
 print(FutureIDDF.isnull().sum())
@@ -1543,61 +1619,291 @@ print(FutureIDDF.isna().sum())
 print(FutureIDDF[FutureIDDF['Date Of Appointment']==pd.Timestamp('')].shape)
 
 
-# In[ ]:
+# In[265]:
 
 
 FutureIDDF.head(5)
 
 
-# In[ ]:
+# In[266]:
 
 
 print(FutureIDDF.dtypes)
 
 
-# In[ ]:
+# In[267]:
 
 
-outcomerph = pd.read_csv(xpath + "Appointments_01Aug2018_07Aug2018.csv")
+#outcomerph = pd.read_csv(xpath + "Appointments_01Aug2018_07Aug2018.csv")
 
 
-# In[ ]:
+# In[268]:
 
 
-outcomerph.columns
-outcomerph=outcomerph.rename(columns = {'Patient Attended':'SourceStatus'})
+#outcomerph.columns
+#outcomerph=outcomerph.rename(columns = {'Patient Attended':'SourceStatus'})
 
 
-# In[ ]:
+# In[269]:
 
 
-pred_out = pd.merge(futureData, outcomerph, left_on=['Appointment ID'], right_on=['Appointment ID'] )
+#pred_out = pd.merge(futureData, outcomerph, left_on=['Appointment ID'], right_on=['Appointment ID'] )
 
 
-# In[ ]:
+# In[270]:
 
 
-pred_outResult =  pd.merge(outcomerph, FutureIDDF, left_on=['Appointment ID'], right_on=['Appointment ID'], how ='inner' ) 
+#pred_outResult =  pd.merge(outcomerph, FutureIDDF, left_on=['Appointment ID'], right_on=['Appointment ID'], how ='inner' ) 
 
-print(pred_outResult.head())
+#print(pred_outResult.head())
 
 
-# In[ ]:
+# In[271]:
 
 
 print(futureData.columns)
 
 pd.crosstab(FutureIDDF['Attend'], futureData['Patient Attended'])
 
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['Attend'], labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+print(classification_report(futureData['Patient Attended'], FutureIDDF['Attend'], labels=unique_label))
 
-# In[ ]:
+
+# In[272]:
 
 
 pd.crosstab(FutureIDDF['AttendB'], futureData['Patient Attended'])
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['AttendB'], labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+print(classification_report(futureData['Patient Attended'], FutureIDDF['AttendB'], labels=unique_label))
+
+
+# In[274]:
+
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['Attendcat'], labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+print(classification_report(futureData['Patient Attended'], FutureIDDF['Attendcat'], labels=unique_label))
+
+
+# In[275]:
+
+
+pd.crosstab(FutureIDDF['AttendNB'], futureData['Patient Attended'])
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['AttendNB'], labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+print(classification_report(futureData['Patient Attended'], FutureIDDF['AttendNB'], labels=unique_label))
 
 
 # In[ ]:
 
 
+
+
+
+# In[324]:
+
+
+mask = FutureIDDF[ (FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0) ] 
+#    FutureIDDF["AttendALL"]
+FutureIDDF["AllAttend"] = 1
+#FutureIDDF.loc[(FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0), ["AllAttend"] ] = 0
+FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 5.3 +  FutureIDDF["MissProbB"] * 2.07 + FutureIDDF['MissProbNB'] * 0.26 + FutureIDDF['MissProbcat'] * 1.00   )/(5.3 + 2.07 + 0.26 + 1.00)     
+FutureIDDF.loc[(FutureIDDF['MissProbAll']>=0.5) , ["AllAttend"] ] = 0
+
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['AllAttend'], labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+print(classification_report(futureData['Patient Attended'], FutureIDDF['AllAttend'], labels=unique_label))
+
+
+# In[ ]:
+
+
+
+
+
+# In[297]:
+
+
 pred_outResult.to_csv(xpath + "/pred_outResultJuly2018B.csv",index=True, header=True, na_rep="NA")
+
+
+# In[298]:
+
+
+print(futureData['Patient Attended'].shape)
+print(FutureIDDF["MissProbAll"].shape)
+
+print(np.unique(futureData['Patient Attended']))
+
+
+# In[299]:
+
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+
+probs = pd.DataFrame(  {0: FutureIDDF["MissProbAll"], 1: 1- FutureIDDF["MissProbAll"] })
+# The magic happens here
+import matplotlib.pyplot as plt
+import scikitplot as skplt
+skplt.metrics.plot_lift_curve( futureData['Patient Attended'], probs)
+plt.title('Wt Average', loc='left')
+plt.legend()
+plt.show()
+
+skplt.metrics.plot_lift_curve( futureData['Patient Attended'], predxgs_prob_Future)
+plt.title('Logit', loc='left')
+plt.legend()
+plt.show()
+skplt.metrics.plot_lift_curve( futureData['Patient Attended'], predictions_prob_Future)
+plt.title('RF', loc='left')
+plt.legend()
+plt.show()
+skplt.metrics.plot_lift_curve( futureData['Patient Attended'], predgnb_prob_Future)
+plt.title('NaiveBayes', loc='left')
+plt.legend()
+plt.show()
+
+
+# In[325]:
+
+
+def PredictFuture(futureFile):
+    futureDataO = pd.read_csv(futureFile)
+    
+    #print(futureDataO['Hosp Code'].value_counts())
+    #print(futureDataO['Hosp Code'][FS | FH])
+    #futureData = futureDataO[RPH]
+    futureData = futureDataO
+    #futureData=futureData.dropna()
+    print(futureData.shape)
+    print(futureData.head(2))
+    futureData.dropna(inplace=True)
+    import datetime
+    futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
+    print("test Data size {}".format(futureData.shape))
+    futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
+    futureData = futureData[futureData['Date Of Appointment'] >= datetime.date(year=2018,month=7,day=21) ]
+    print("test after date  Data size {}".format(futureData.shape))
+    FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
+    
+    FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
+    print("FutureIDDF size {}".format(FutureIDDF.shape))
+    print("FutureIDDF cols {}".format(FutureIDDF.columns))
+    
+    futureDatap,Yf=prepareData(Appointdf=futureData)
+    #futureDatapDummy = Dummify(Appointdf=futureDatap, cat_vars=cat_vars)
+    futureDatapDummy = mcle.transform(futureDatap)
+    print("futureDatapDummy {}".format(futureDatapDummy.shape))
+    
+    futureDatapDummy['AppointmentSequence'].fillna((Appointdft['AppointmentSequence'].mean()), inplace=True)
+    print('AppointmentSequence')
+    futureDatapDummy['Age'].fillna( Appointdft['Age'].mean() , inplace=True)
+    print('Age')
+    futureDatapDummy['IsFirstNonCancelledAppointment'].fillna( 0 , inplace=True)
+    print('IsFirstNonCancelledAppointment')
+    futureDatapDummy['Is Interpreter Required'].fillna(0, inplace=True)
+    print('Is Interpreter Required')
+    futureDatapDummy['MinTemp'].fillna((Appointdft['MinTemp'].mean()), inplace=True)
+    print('MinTemp')
+    futureDatapDummy['MaxTemp'].fillna((Appointdft['MaxTemp'].mean()), inplace=True)
+    print('MaxTemp')
+    futureDatapDummy['rainfall'].fillna( 0, inplace=True)
+    print('rainfall')
+    futureDatapDummy['SEIFAStatePercentile'].fillna( (Appointdft['SEIFAStatePercentile'].mean()), inplace=True)
+    print('SEIFAStatePercentile')
+    futureDatapDummy['PriorAttendanceRate'].fillna((Appointdft['PriorAttendanceRate'].mean()), inplace=True)
+    print('PriorAttendanceRate')
+    futureDatapDummy['Appoint_Book_Length'].fillna( (Appointdft['Appoint_Book_Length'].mean() ), inplace=True)
+    print('Appoint_Book_Length')
+    
+    print("Null: {}".format(Appointdft.isnull().sum(axis=0)))
+    
+    futureDatapDummy.dropna(inplace=True)
+    
+    print("after concat futureDatapDummy {}".format(futureDatapDummy.shape))
+    print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
+    #NullCols = futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist()
+    #for c in NullCols:
+    #    futureDatapDummy[c]=0
+    print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
+    futureDatapDummy.head(1)
+    
+    predictions_Future = clf.predict(futureDatapDummy)
+    predictions_prob_Future = clf.predict_proba(futureDatapDummy)
+    #predxgs_Future = clsb.predict(futureDatapDummy)
+    #predxgs_prob_Future = clsb.predict_proba(futureDatapDummy)
+    predxgs_Future = logreg.predict(futureDatapDummy)
+    predxgs_prob_Future = logreg.predict_proba(futureDatapDummy)
+    print(clf.classes_)
+    
+    predNB_Future = logreg.predict(futureDatapDummy)
+    predNB_prob_Future = logreg.predict_proba(futureDatapDummy)
+    
+    predgnb_Future = gnb.predict(futureDatapDummy)
+    predgnb_prob_Future = gnb.predict_proba(futureDatapDummy)
+    
+    predcat_Future = catmodel.predict(futureDatapDummy)
+    predcat_prob_Future = catmodel.predict_proba(futureDatapDummy)
+    
+    predictionsFutureDF = pd.DataFrame(predictions_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+    predictionsFutureDFB = pd.DataFrame(predxgs_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+    predictionsFutureDFNB = pd.DataFrame(predgnb_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+    
+    predictionsFutureDFcat = pd.DataFrame(predcat_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
+    
+    print(FutureIDDF.shape)
+    print(predictions_Future.shape)
+    
+    FutureIDDF = FutureIDDF.assign(Attend=predictions_Future)  
+    FutureIDDF = FutureIDDF.assign(AttendB=predxgs_Future)  
+    FutureIDDF = FutureIDDF.assign(AttendNB=predgnb_Future)  
+    FutureIDDF = FutureIDDF.assign(Attendcat=predcat_Future)
+    
+    FutureIDDF = FutureIDDF.assign(MissProb=predictionsFutureDF["WillMissProb"].values)
+    FutureIDDF = FutureIDDF.assign(MissProbB=predictionsFutureDFB["WillMissProb"].values)
+    FutureIDDF = FutureIDDF.assign(MissProbNB=predictionsFutureDFNB["WillMissProb"].values)
+    FutureIDDF = FutureIDDF.assign(MissProbcat=predictionsFutureDFcat["WillMissProb"].values)
+    mask = FutureIDDF[ (FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0) ] 
+    #    FutureIDDF["AttendALL"]
+    FutureIDDF["AllAttend"] = 1
+    #FutureIDDF.loc[(FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0), ["AllAttend"] ] = 0
+    FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 5.3 +  FutureIDDF["MissProbB"] * 2.07 + FutureIDDF['MissProbNB'] * 0.26 + FutureIDDF['MissProbcat'] * 1.00   )/(5.3 + 2.07 + 0.26 + 1.00)     
+    FutureIDDF.loc[(FutureIDDF['MissProbAll']>=0.5) , ["AllAttend"] ] = 0
+    return FutureIDDF
+
+
+# In[327]:
+
+
+pred_outResult = PredictFuture(xpath + "/Appointments_25Aug2018_31Aug2018.csv" )
+pred_outResult.to_csv(xpath + "/pred_outResult__25Aug2018_31Aug2018.csv",index=True, header=True, na_rep="NA")
+print("Future prediction completed!!")
 
