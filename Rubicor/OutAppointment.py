@@ -32,7 +32,7 @@ from sklearn.model_selection import train_test_split
 
 xpath = "/home/he159490/DS/OUT/"
 xpath = "/media/DataDrive/"
-AppointCSV = "Appointments_10Aug2016_10Aug2018.csv"
+AppointCSV = "Appointments_10Aug2015_17Aug2018.csv"
 
 
 # In[4]:
@@ -974,7 +974,7 @@ clf.fit(Appointdft,  Y)
 #print(scores)
 
 
-# In[256]:
+# In[56]:
 
 
 from sklearn.model_selection import cross_val_score
@@ -1068,7 +1068,7 @@ joblib.dump(gnb, xpath + '/NB_JL20132018.pkl')
 catmodel.save_model(xpath + '/CatBoost_JL20132018.pkl', format="cbm", export_parameters=None)
 
 
-# In[61]:
+# In[62]:
 
 
 def FeatureImportance(forest,X, fsize=None):
@@ -1114,7 +1114,7 @@ plt.bar(range(10), clf.feature_importances_[indices[:10]],
          color="r", yerr=std[indices[:10]], align="center")
 
 
-# In[259]:
+# In[63]:
 
 
 # Predict 
@@ -1142,7 +1142,7 @@ print("confMatrixCAT {}".format( confMatrixCAT))
 #print("confMatrixPercent {}".format( confMatrixPercent))
 
 
-# In[63]:
+# In[64]:
 
 
 print(Y.value_counts())
@@ -1153,7 +1153,7 @@ print(X_train.shape)
 print(X_test.shape)
 
 
-# In[64]:
+# In[65]:
 
 
 # Predict 
@@ -1180,29 +1180,29 @@ ser = pd.Series(lpredictions)
 print(ser.value_counts())
 
 
-# In[258]:
-
-
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-unique_label = np.unique(y_test)
-print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
-                   index=['true:{:}'.format(x) for x in unique_label], 
-                   columns=['pred:{:}'.format(x) for x in unique_label]))
-
-
-# In[65]:
-
-
-from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
-unique_label = np.unique(y_test)
-print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
-                   index=['true:{:}'.format(x) for x in unique_label], 
-                   columns=['pred:{:}'.format(x) for x in unique_label]))
-
-
 # In[66]:
+
+
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+
+# In[67]:
+
+
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+unique_label = np.unique(y_test)
+print(pd.DataFrame(confusion_matrix(y_test, lpredictions, labels=unique_label), 
+                   index=['true:{:}'.format(x) for x in unique_label], 
+                   columns=['pred:{:}'.format(x) for x in unique_label]))
+
+
+# In[68]:
 
 
 
@@ -1220,58 +1220,58 @@ print(X_train.columns[sorted_index[0:10]])
 #print(testData.shape)
 
 
-# In[67]:
+# In[69]:
 
 
 #testData.head(2)
 
 
-# In[68]:
+# In[70]:
 
 
 #testData[testData["class_0"].notnull()].head(2) 
 
 
-# In[69]:
+# In[71]:
 
 
 #testData = testData[testData["class_0"].notnull()] 
 #print("test Data size {}".format(testData.shape))
 
 
-# In[70]:
+# In[72]:
 
 
 #testDatap,Yt= prepareData(Appointdf=testData)
 
 
-# In[71]:
+# In[73]:
 
 
 #testDataDummy = Dummify(Appointdf=testDatap, cat_vars=cat_vars)
 
 
-# In[72]:
+# In[74]:
 
 
 #print(testDataDummy.shape )
 #print(X_train.shape)
 
 
-# In[73]:
+# In[75]:
 
 
 XtrainEmpty = Appointdf[0:0]
 
 
-# In[74]:
+# In[76]:
 
 
 #print(XtrainEmpty.shape)
 #print(XtrainEmpty.dtypes)
 
 
-# In[75]:
+# In[77]:
 
 
 
@@ -1279,13 +1279,13 @@ XtrainEmpty = Appointdf[0:0]
 #resultdf = testDataDummy[list(XtrainEmpty.columns)]
 
 
-# In[76]:
+# In[78]:
 
 
 #print(resultdf.shape)
 
 
-# In[77]:
+# In[79]:
 
 
 #print(resultdf.columns[resultdf.isna().any()].tolist())
@@ -1295,13 +1295,13 @@ XtrainEmpty = Appointdf[0:0]
     
 
 
-# In[78]:
+# In[80]:
 
 
 #print(resultdf.columns[resultdf.isna().any()].tolist())
 
 
-# In[79]:
+# In[81]:
 
 
 ## Predict 
@@ -1312,7 +1312,7 @@ XtrainEmpty = Appointdf[0:0]
 #predxgs_prob_2weeks = clsb.predict_proba(resultdf)
 
 
-# In[80]:
+# In[82]:
 
 
 #print("evaluate ....")
@@ -1320,7 +1320,7 @@ XtrainEmpty = Appointdf[0:0]
 #print_evaluation_scores_multi_class(y_val=Yt, predicted=predxgs_2weeks)
 
 
-# In[81]:
+# In[83]:
 
 
 #print("confusion matrix ....")
@@ -1336,7 +1336,7 @@ XtrainEmpty = Appointdf[0:0]
 #print(confMatrixPercent)
 
 
-# In[82]:
+# In[84]:
 
 
 #from sklearn.metrics import confusion_matrix
@@ -1347,7 +1347,7 @@ XtrainEmpty = Appointdf[0:0]
 #                   columns=['pred:{:}'.format(x) for x in unique_label]))
 
 
-# In[83]:
+# In[85]:
 
 
 #predictionsDF = pd.DataFrame(predictions_prob_2weeks, columns=["WillMiss", "WillNotMiss"])
@@ -1355,20 +1355,20 @@ XtrainEmpty = Appointdf[0:0]
 #print(predictionsDF.shape)
 
 
-# In[84]:
+# In[86]:
 
 
 #resultDF_PredProb = predictionsDF.join(testData)
 
 
-# In[85]:
+# In[87]:
 
 
 #list(resultDF_PredProb.columns)
 #list(resultdf.columns)
 
 
-# In[86]:
+# In[88]:
 
 
 #  resultDF = resultDF_PredProb[[
@@ -1382,10 +1382,10 @@ XtrainEmpty = Appointdf[0:0]
     
 
 
-# In[166]:
+# In[89]:
 
 
-futureDataO = pd.read_csv(xpath + "/Appointments_10Aug2018_21Aug2018.csv")
+futureDataO = pd.read_csv(xpath + "/Appointments_17Aug2018_22Aug2018.csv")
 
 #print(futureDataO['Hosp Code'].value_counts())
 FS  = futureDataO['Hosp Code']=='FS' 
@@ -1400,7 +1400,7 @@ print(futureData.head(2))
 futureData.dropna(inplace=True)
 
 
-# In[167]:
+# In[90]:
 
 
 import datetime
@@ -1412,7 +1412,7 @@ print("test after date  Data size {}".format(futureData.shape))
 FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
 
 
-# In[168]:
+# In[91]:
 
 
 FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
@@ -1420,7 +1420,7 @@ print("FutureIDDF size {}".format(FutureIDDF.shape))
 print("FutureIDDF cols {}".format(FutureIDDF.columns))
 
 
-# In[169]:
+# In[92]:
 
 
 #futureData.Postcode.astype(str).str.contains('No Value', regex=False, na=False)
@@ -1430,7 +1430,7 @@ print("FutureIDDF cols {}".format(FutureIDDF.columns))
 #futureData['Patient Attended'] = 0
 
 
-# In[170]:
+# In[93]:
 
 
 futureDatap,Yf=prepareData(Appointdf=futureData)
@@ -1465,7 +1465,7 @@ futureDatapDummy.dropna(inplace=True)
 
 
 
-# In[171]:
+# In[94]:
 
 
 #XtrainEmpty = Appointdf[0:0]
@@ -1475,7 +1475,7 @@ futureDatapDummy.dropna(inplace=True)
 #print((XtrainEmpty.columns))
 
 
-# In[172]:
+# In[95]:
 
 
 #print("concat columns futureDatapDummy {}".format(futureDatapDummy.shape))
@@ -1487,7 +1487,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(len(comm_cols))
 
 
-# In[173]:
+# In[96]:
 
 
 #futureDatapDummy = pd.concat([df[common_cols] for df in frames], ignore_index=True, sort=False)
@@ -1497,7 +1497,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(futureDatapDummy.shape)
 
 
-# In[174]:
+# In[97]:
 
 
 #print(len(XtrainEmpty_cols))
@@ -1509,7 +1509,7 @@ futureDatapDummy.dropna(inplace=True)
 #print(futureDatapDummy.shape)
 
 
-# In[175]:
+# In[98]:
 
 
 print("after concat futureDatapDummy {}".format(futureDatapDummy.shape))
@@ -1521,7 +1521,7 @@ print(futureDatapDummy.columns[futureDatapDummy.isna().any()].tolist())
 futureDatapDummy.head(1)
 
 
-# In[176]:
+# In[99]:
 
 
 predictions_Future = clf.predict(futureDatapDummy)
@@ -1539,14 +1539,14 @@ predgnb_Future = gnb.predict(futureDatapDummy)
 predgnb_prob_Future = gnb.predict_proba(futureDatapDummy)
 
 
-# In[261]:
+# In[100]:
 
 
 predcat_Future = catmodel.predict(futureDatapDummy)
 predcat_prob_Future = catmodel.predict_proba(futureDatapDummy)
 
 
-# In[177]:
+# In[101]:
 
 
 
@@ -1557,7 +1557,7 @@ predcat_prob_Future = catmodel.predict_proba(futureDatapDummy)
 #print(logreg.classes_)
 
 
-# In[ ]:
+# In[102]:
 
 
 
@@ -1568,7 +1568,7 @@ print(predxgs_Future.shape)
 print(FutureIDDF.shape)
 
 
-# In[262]:
+# In[103]:
 
 
 predictionsFutureDF = pd.DataFrame(predictions_prob_Future, columns=["WillMissProb", "WillNotMissProb"])
@@ -1591,7 +1591,7 @@ FutureIDDF = FutureIDDF.assign(MissProbNB=predictionsFutureDFNB["WillMissProb"].
 FutureIDDF = FutureIDDF.assign(MissProbcat=predictionsFutureDFcat["WillMissProb"].values)
 
 
-# In[180]:
+# In[104]:
 
 
 #FutureDF_PredProb = predictionsFutureDF.join(FutureIDDF)
@@ -1601,7 +1601,7 @@ print(predictionsFutureDF.shape)
 print(predictionsFutureDFB.shape)
 
 
-# In[263]:
+# In[105]:
 
 
 FutureIDDF.to_csv(xpath + "/PredictionJuly2018.csv",index=True, header=True, na_rep="NA")
@@ -1611,7 +1611,7 @@ predictionsFutureDFNB.to_csv(xpath + "/ProbsJuly2018NB.csv",index=True, header=T
 predictionsFutureDFcat.to_csv(xpath + "/ProbsJuly2018cat.csv",index=True, header=True, na_rep="NA")
 
 
-# In[264]:
+# In[106]:
 
 
 print(FutureIDDF.isnull().sum())
@@ -1619,38 +1619,38 @@ print(FutureIDDF.isna().sum())
 print(FutureIDDF[FutureIDDF['Date Of Appointment']==pd.Timestamp('')].shape)
 
 
-# In[265]:
+# In[107]:
 
 
 FutureIDDF.head(5)
 
 
-# In[266]:
+# In[108]:
 
 
 print(FutureIDDF.dtypes)
 
 
-# In[267]:
+# In[109]:
 
 
 #outcomerph = pd.read_csv(xpath + "Appointments_01Aug2018_07Aug2018.csv")
 
 
-# In[268]:
+# In[110]:
 
 
 #outcomerph.columns
 #outcomerph=outcomerph.rename(columns = {'Patient Attended':'SourceStatus'})
 
 
-# In[269]:
+# In[111]:
 
 
 #pred_out = pd.merge(futureData, outcomerph, left_on=['Appointment ID'], right_on=['Appointment ID'] )
 
 
-# In[270]:
+# In[112]:
 
 
 #pred_outResult =  pd.merge(outcomerph, FutureIDDF, left_on=['Appointment ID'], right_on=['Appointment ID'], how ='inner' ) 
@@ -1658,11 +1658,11 @@ print(FutureIDDF.dtypes)
 #print(pred_outResult.head())
 
 
-# In[271]:
+# In[115]:
 
 
 print(futureData.columns)
-
+from  sklearn.metrics import classification_report
 pd.crosstab(FutureIDDF['Attend'], futureData['Patient Attended'])
 
 from sklearn.metrics import confusion_matrix
@@ -1674,7 +1674,7 @@ print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['
 print(classification_report(futureData['Patient Attended'], FutureIDDF['Attend'], labels=unique_label))
 
 
-# In[272]:
+# In[116]:
 
 
 pd.crosstab(FutureIDDF['AttendB'], futureData['Patient Attended'])
@@ -1689,7 +1689,7 @@ print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['
 print(classification_report(futureData['Patient Attended'], FutureIDDF['AttendB'], labels=unique_label))
 
 
-# In[274]:
+# In[117]:
 
 
 from sklearn.metrics import confusion_matrix
@@ -1703,7 +1703,7 @@ print(pd.DataFrame(confusion_matrix(futureData['Patient Attended'], FutureIDDF['
 print(classification_report(futureData['Patient Attended'], FutureIDDF['Attendcat'], labels=unique_label))
 
 
-# In[275]:
+# In[118]:
 
 
 pd.crosstab(FutureIDDF['AttendNB'], futureData['Patient Attended'])
@@ -1722,14 +1722,14 @@ print(classification_report(futureData['Patient Attended'], FutureIDDF['AttendNB
 
 
 
-# In[324]:
+# In[145]:
 
 
 mask = FutureIDDF[ (FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0) ] 
 #    FutureIDDF["AttendALL"]
 FutureIDDF["AllAttend"] = 1
 #FutureIDDF.loc[(FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0), ["AllAttend"] ] = 0
-FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 5.3 +  FutureIDDF["MissProbB"] * 2.07 + FutureIDDF['MissProbNB'] * 0.26 + FutureIDDF['MissProbcat'] * 1.00   )/(5.3 + 2.07 + 0.26 + 1.00)     
+FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 1.25 +  FutureIDDF["MissProbB"] * 1.53 + FutureIDDF['MissProbNB'] * 4.4 + FutureIDDF['MissProbcat'] * 2.33   )/(1.25 + 1.53 + 4.4 + 2.33)     
 FutureIDDF.loc[(FutureIDDF['MissProbAll']>=0.5) , ["AllAttend"] ] = 0
 
 from sklearn.metrics import confusion_matrix
@@ -1748,13 +1748,13 @@ print(classification_report(futureData['Patient Attended'], FutureIDDF['AllAtten
 
 
 
-# In[297]:
+# In[120]:
 
 
-pred_outResult.to_csv(xpath + "/pred_outResultJuly2018B.csv",index=True, header=True, na_rep="NA")
+#pred_outResult.to_csv(xpath + "/pred_outResultJuly2018B.csv",index=True, header=True, na_rep="NA")
 
 
-# In[298]:
+# In[121]:
 
 
 print(futureData['Patient Attended'].shape)
@@ -1763,7 +1763,7 @@ print(FutureIDDF["MissProbAll"].shape)
 print(np.unique(futureData['Patient Attended']))
 
 
-# In[299]:
+# In[122]:
 
 
 from sklearn.datasets import load_breast_cancer
@@ -1792,7 +1792,7 @@ plt.legend()
 plt.show()
 
 
-# In[325]:
+# In[123]:
 
 
 def PredictFuture(futureFile):
@@ -1810,7 +1810,7 @@ def PredictFuture(futureFile):
     futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
     print("test Data size {}".format(futureData.shape))
     futureData['Date Of Appointment'] = pd.to_datetime(futureData['Date Of Appointment'])
-    futureData = futureData[futureData['Date Of Appointment'] >= datetime.date(year=2018,month=7,day=21) ]
+    #futureData = futureData[futureData['Date Of Appointment'] >= datetime.date(year=2018,month=7,day=21) ]
     print("test after date  Data size {}".format(futureData.shape))
     FutureIDDF = futureData[['Date Of Appointment', 'Appointment ID', 'AccountNumber']]
     
@@ -1895,15 +1895,24 @@ def PredictFuture(futureFile):
     #    FutureIDDF["AttendALL"]
     FutureIDDF["AllAttend"] = 1
     #FutureIDDF.loc[(FutureIDDF['AttendB']==0) &  (FutureIDDF['Attend']==0), ["AllAttend"] ] = 0
-    FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 5.3 +  FutureIDDF["MissProbB"] * 2.07 + FutureIDDF['MissProbNB'] * 0.26 + FutureIDDF['MissProbcat'] * 1.00   )/(5.3 + 2.07 + 0.26 + 1.00)     
+    FutureIDDF["MissProbAll"]  = (FutureIDDF["MissProb"] * 1.25 +  FutureIDDF["MissProbB"] * 1.53 + FutureIDDF['MissProbNB'] * 4.4 + FutureIDDF['MissProbcat'] * 2.33   )/(1.25 + 1.53 + 4.4 + 2.33)     
+
     FutureIDDF.loc[(FutureIDDF['MissProbAll']>=0.5) , ["AllAttend"] ] = 0
     return FutureIDDF
 
 
-# In[327]:
+# In[146]:
 
 
 pred_outResult = PredictFuture(xpath + "/Appointments_25Aug2018_31Aug2018.csv" )
 pred_outResult.to_csv(xpath + "/pred_outResult__25Aug2018_31Aug2018.csv",index=True, header=True, na_rep="NA")
+print("Future prediction completed!!")
+
+
+# In[124]:
+
+
+pred_outResult = PredictFuture(xpath + "/Appointments_10Aug2018_21Aug2018.csv" )
+pred_outResult.to_csv(xpath + "/pred_outResult__10Aug2018_21Aug2018.csv",index=True, header=True, na_rep="NA")
 print("Future prediction completed!!")
 
