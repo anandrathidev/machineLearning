@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Oct 14 15:41:22 2018
-
 @author: anandrathi
 """
 
@@ -62,10 +61,10 @@ for i in range(3):
         print('%s\t%s' % (token, tag))
     print()
 
- # In[]:
+# In[]:
 from collections import defaultdict
 
- # In[]:
+# In[]:
 
 def build_dict(tokens_or_tags, special_tokens):
     """
@@ -109,7 +108,7 @@ def build_dict(tokens_or_tags, special_tokens):
 
     return tok2idx, idx2tok
 
- # In[]:
+# In[]:
 special_tokens = ['<UNK>', '<PAD>']
 special_tags = ['O']
 
@@ -172,50 +171,49 @@ def batches_generator(batch_size, tokens, tags,
         yield x, y, lengths
 
 
- # In[]:
+# In[]:
 import tensorflow as tf
 import numpy as np
 
- # In[]:
-class BiLSTMModel():
-    pass
-
- # In[]:
-def declare_placeholders(self):
-    """Specifies placeholders for the model."""
-
-    # Placeholders for input and ground truth output.
-    self.input_batch = tf.placeholder(dtype=tf.int32, shape=[None, None], name='input_batch')
-    ######### YOUR CODE HERE #############
-    self.ground_truth_tags = tf.placeholder(dtype=tf.int32, shape=[None, None], name='ground_truth_tags')
-
-    # Placeholder for lengths of the sequences.
-    self.lengths = tf.placeholder(dtype=tf.int32, shape=[None], name='lengths')
-
-    # Placeholder for a dropout keep probability. If we don't feed
-    # a value for this placeholder, it will be equal to 1.0.
-    self.dropout_ph = tf.placeholder_with_default(tf.cast(1.0, tf.float32), shape=[])
-
-    # Placeholder for a learning rate (tf.float32).
-    ######### YOUR CODE HERE #############
-    self.learning_rate_ph = tf.placeholder_with_default(tf.cast(0.5, tf.float32), shape=[])
-
 # In[]:
-BiLSTMModel.__declare_placeholders = classmethod(declare_placeholders)
+class BiLSTMModel():
 
- # In[]:
- def build_layers(self, vocabulary_size, embedding_dim, n_hidden_rnn, n_tags):
+  def declare_placeholders(self):
+      """Specifies placeholders for the model."""
+
+      # Placeholders for input and ground truth output.
+      self.input_batch = tf.placeholder(dtype=tf.int32, shape=[None, None], name='input_batch')
+      ######### YOUR CODE HERE #############
+      self.ground_truth_tags = tf.placeholder(dtype=tf.int32, shape=[None, None], name='ground_truth_tags')
+
+      # Placeholder for lengths of the sequences.
+      self.lengths = tf.placeholder(dtype=tf.int32, shape=[None], name='lengths')
+
+      # Placeholder for a dropout keep probability. If we don't feed
+      # a value for this placeholder, it will be equal to 1.0.
+      self.dropout_ph = tf.placeholder_with_default(tf.cast(1.0, tf.float32), shape=[])
+
+      # Placeholder for a learning rate (tf.float32).
+      ######### YOUR CODE HERE #############
+      self.learning_rate_ph = tf.placeholder_with_default(tf.cast(0.5, tf.float32), shape=[])
+
+  BiLSTMModel.__declare_placeholders = classmethod(declare_placeholders)
+
+  def build_layers(self, vocabulary_size, embedding_dim, n_hidden_rnn, n_tags):
     """Specifies bi-LSTM architecture and computes logits for inputs."""
 
     # Create embedding variable (tf.Variable) with dtype tf.float32
     initial_embedding_matrix = np.random.randn(vocabulary_size, embedding_dim) / np.sqrt(embedding_dim)
     ######### YOUR CODE HERE #############
-    embedding_matrix_variable =
+    embedding_matrix_variable = tf.Variable(initial_embedding_matrix, name='embeddings_matrix', trainable = True, use_resource = True, dtype=tf.float32)
 
     # Create RNN cells (for example, tf.nn.rnn_cell.BasicLSTMCell) with n_hidden_rnn number of units
     # and dropout (tf.nn.rnn_cell.DropoutWrapper), initializing all *_keep_prob with dropout placeholder.
-    forward_cell =  ######### YOUR CODE HERE #############
-    backward_cell =  ######### YOUR CODE HERE #############
+    
+    forward_cell  = tf.nn.rnn_cell.LSTMCell(n_hidden_rnn, state_is_tuple=True)   ######### YOUR CODE HERE #############
+    forward_cell = tf.nn.rnn_cell.DropoutWrapper(forward_cell, input_keep_prob=input_dropout, output_keep_prob=output_dropout)
+    
+    backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden_rnn, state_is_tuple=True) ######### YOUR CODE HERE #############
 
     # Look up embeddings for self.input_batch (tf.nn.embedding_lookup).
     # Shape: [batch_size, sequence_len, embedding_dim].
@@ -233,5 +231,4 @@ BiLSTMModel.__declare_placeholders = classmethod(declare_placeholders)
 
 
 
-  # In[]:
-
+# In[]:
