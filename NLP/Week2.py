@@ -210,19 +210,31 @@ class BiLSTMModel():
     # Create RNN cells (for example, tf.nn.rnn_cell.BasicLSTMCell) with n_hidden_rnn number of units
     # and dropout (tf.nn.rnn_cell.DropoutWrapper), initializing all *_keep_prob with dropout placeholder.
     
-    forward_cell  = tf.nn.rnn_cell.LSTMCell(n_hidden_rnn, state_is_tuple=True)   ######### YOUR CODE HERE #############
-    forward_cell = tf.nn.rnn_cell.DropoutWrapper(forward_cell, input_keep_prob=input_dropout, output_keep_prob=output_dropout)
+    forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden_rnn, state_is_tuple=True)   ######### YOUR CODE HERE #############
+    forward_cell = tf.nn.rnn_cell.DropoutWrapper(forward_cell, 
+                                                 output_keep_prob=self.dropout_ph)
     
     backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden_rnn, state_is_tuple=True) ######### YOUR CODE HERE #############
+    forward_cell = tf.nn.rnn_cell.DropoutWrapper(backward_cell, 
+                                                 input_keep_prob=self.dropout_ph, 
+                                                 output_keep_prob=self.dropout_ph)
 
-    # Look up embeddings for self.input_batch (tf.nn.embedding_lookup).
+    # Look up embeddings for self.input_batch (tf.nn.embedding_lookup).    
     # Shape: [batch_size, sequence_len, embedding_dim].
-    embeddings =  ######### YOUR CODE HERE #############
-
+    #embeddings =  tf.nn.embedding_lookup ######### YOUR CODE HERE #############
+    embeddings = tf.nn.embedding_lookup(params = embedding_matrix_variable, ids = self.input_batch)
     # Pass them through Bidirectional Dynamic RNN (tf.nn.bidirectional_dynamic_rnn).
     # Shape: [batch_size, sequence_len, 2 * n_hidden_rnn].
     # Also don't forget to initialize sequence_length as self.lengths and dtype as tf.float32.
-    (rnn_output_fw, rnn_output_bw), _ =  ######### YOUR CODE HERE #############
+    # (rnn_output_fw, rnn_output_bw), _ =  ######### YOUR CODE HERE #############
+    
+    (rnn_output_fw, rnn_output_bw), _ =  tf.nn.bidirectional_dynamic_rnn(
+        cell_fw=forward_cell, cell_bw=backward_cell,
+        dtype=tf.float32,
+        inputs=embeddings,
+        sequence_length=self.lengths
+    )
+    
     rnn_output = tf.concat([rnn_output_fw, rnn_output_bw], axis=2)
 
     # Dense layer on top.
@@ -230,5 +242,31 @@ class BiLSTMModel():
     self.logits = tf.layers.dense(rnn_output, n_tags, activation=None)
 
 
+  BiLSTMModel.__build_layers = classmethod(build_layers)
 
+  def compute_predictions(self):
+    """Transforms logits to probabilities and finds the most probable tags."""
+    
+    # Create softmax (tf.nn.softmax) function
+    softmax_output = ######### YOUR CODE HERE #############
+    
+    # Use argmax (tf.argmax) to get the most probable tags
+    # Don't forget to set axis=-1
+    # otherwise argmax will be calculated in a wrong way
+    self.predictions = ######### YOUR CODE HERE #############  
+
+  BiLSTMModel.__compute_predictions = classmethod(compute_predictions)
+
+  def compute_loss(self, n_tags, PAD_index):
+    """Computes masked cross-entopy loss with logits."""
+    
+    # Create cross entropy function function (tf.nn.softmax_cross_entropy_with_logits)
+    ground_truth_tags_one_hot = tf.one_hot(self.ground_truth_tags, n_tags)
+    #loss_tensor =  ######### YOUR CODE HERE #############
+    loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_tags_one_hot, logits=self.logits)
+    mask = tf.cast(tf.not_equal(self.input_batch, PAD_index), tf.float32)
+    # Create loss function which doesn't operate with <PAD> tokens (tf.reduce_mean)
+    # Be careful that the argument of tf.reduce_mean should be
+    # multiplication of mask and loss_tensor.
+    self.loss =  ######### YOUR CODE HERE #############  
 # In[]:
