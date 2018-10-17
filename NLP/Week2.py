@@ -248,12 +248,11 @@ class BiLSTMModel():
     """Transforms logits to probabilities and finds the most probable tags."""
     
     # Create softmax (tf.nn.softmax) function
-    softmax_output = ######### YOUR CODE HERE #############
-    
+    softmax_output = tf.nn.softmax(self.logits)     ######### YOUR CODE HERE #############
     # Use argmax (tf.argmax) to get the most probable tags
     # Don't forget to set axis=-1
     # otherwise argmax will be calculated in a wrong way
-    self.predictions = ######### YOUR CODE HERE #############  
+    self.predictions = tf.argmax(softmax_output, axis = -1) ######### YOUR CODE HERE #############  
 
   BiLSTMModel.__compute_predictions = classmethod(compute_predictions)
 
