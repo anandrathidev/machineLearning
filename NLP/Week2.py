@@ -267,5 +267,99 @@ class BiLSTMModel():
     # Create loss function which doesn't operate with <PAD> tokens (tf.reduce_mean)
     # Be careful that the argument of tf.reduce_mean should be
     # multiplication of mask and loss_tensor.
-    self.loss =  ######### YOUR CODE HERE #############  
+    self.loss =   tf.reduce_mean(tf.reduce_sum(mask * loss_tensor, axis = -1)/tf.reduce_sum(mask,axis = -1)) ######### YOUR CODE HERE #############  
+    
+  def perform_optimization(self):
+    """Specifies the optimizer and train_op for the model."""
+    
+    # Create an optimizer (tf.train.AdamOptimizer)
+    self.optimizer =  tf.train.AdamOptimizer(self.learning_rate_ph) ######### YOUR CODE HERE #############
+    self.grads_and_vars = self.optimizer.compute_gradients(self.loss)
+    
+    # Gradient clipping (tf.clip_by_norm) for self.grads_and_vars
+    # Pay attention that you need to apply this operation only for gradients 
+    # because self.grads_and_vars also contains variables.
+    # list comprehension might be useful in this case.
+    clip_norm = tf.cast(1.0, tf.float32)
+    self.grads_and_vars =  [(tf.clip_by_norm(grad, clip_norm), var) for grad, var in self.grads_and_vars] ######### YOUR CODE HERE #############
+    
+    self.train_op = self.optimizer.apply_gradients(self.grads_and_vars)    
+
+  BiLSTMModel.__perform_optimization = classmethod(perform_optimization)
+
+  def init_model(self, vocabulary_size, n_tags, embedding_dim, n_hidden_rnn, PAD_index):
+    self.__declare_placeholders()
+    self.__build_layers(vocabulary_size, embedding_dim, n_hidden_rnn, n_tags)
+    self.__compute_predictions()
+    self.__compute_loss(n_tags, PAD_index)
+    self.__perform_optimization()  
+    
+  BiLSTMModel.__init__ = classmethod(init_model)
+
+  
+  def train_on_batch(self, session, x_batch, y_batch, lengths, learning_rate, dropout_keep_probability):
+      feed_dict = {self.input_batch: x_batch,
+                   self.ground_truth_tags: y_batch,
+                   self.learning_rate_ph: learning_rate,
+                   self.dropout_ph: dropout_keep_probability,
+                   self.lengths: lengths}
+      
+      session.run(self.train_op, feed_dict=feed_dict)
+  
+  BiLSTMModel.train_on_batch = classmethod(train_on_batch)
+
+  def predict_for_batch(self, session, x_batch, lengths):
+    ######################################
+    ######### YOUR CODE HERE #############
+    ######################################
+    feed_dict = {self.input_batch: x_batch, 
+                 self.lengths: lengths
+                }
+    predictions = session.run(self.predictions, feed_dict = feed_dict)
+    return predictions
+  
+  BiLSTMModel.predict_for_batch = classmethod(predict_for_batch)
+  
+  
 # In[]:
+from evaluation import precision_recall_f1
+
+def predict_tags(model, session, token_idxs_batch, lengths):
+    """Performs predictions and transforms indices to tokens and tags."""
+    
+    tag_idxs_batch = model.predict_for_batch(session, token_idxs_batch, lengths)
+    
+    tags_batch, tokens_batch = [], []
+    for tag_idxs, token_idxs in zip(tag_idxs_batch, token_idxs_batch):
+        tags, tokens = [], []
+        for tag_idx, token_idx in zip(tag_idxs, token_idxs):
+            tags.append(idx2tag[tag_idx])
+            tokens.append(idx2token[token_idx])
+        tags_batch.append(tags)
+        tokens_batch.append(tokens)
+    return tags_batch, tokens_batch
+    
+    
+def eval_conll(model, session, tokens, tags, short_report=True):
+    """Computes NER quality measures using CONLL shared task script."""
+    
+    y_true, y_pred = [], []
+    for x_batch, y_batch, lengths in batches_generator(1, tokens, tags):
+        tags_batch, tokens_batch = predict_tags(model, session, x_batch, lengths)
+        if len(x_batch[0]) != len(tags_batch[0]):
+            raise Exception("Incorrect length of prediction for the input, "
+                            "expected length: %i, got: %i" % (len(x_batch[0]), len(tags_batch[0])))
+        predicted_tags = []
+        ground_truth_tags = []
+        for gt_tag_idx, pred_tag, token in zip(y_batch[0], tags_batch[0], tokens_batch[0]): 
+            if token != '<PAD>':
+                ground_truth_tags.append(idx2tag[gt_tag_idx])
+                predicted_tags.append(pred_tag)
+
+        # We extend every prediction and ground truth sequence with 'O' tag
+        # to indicate a possible end of entity.
+        y_true.extend(ground_truth_tags + ['O'])
+        y_pred.extend(predicted_tags + ['O'])
+        
+    results = precision_recall_f1(y_true, y_pred, print_results=True, short_report=short_report)
+    return results
