@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+Spyder Editor
+
+This is a temporary script file.
+"""
+
+# -*- coding: utf-8 -*-
+"""
 Created on Sun Oct 14 15:41:22 2018
 @author: anandrathi
 """
@@ -42,7 +49,7 @@ def read_data(file_path):
             ######### YOUR CODE HERE #############
             ######################################
             if token.strip().lower().startswith("http://") or token.strip().lower().startswith("https://")  or bool(urlparse(token.strip().lower()).netloc):
-:              token = "<URL>"
+              token = "<URL>"
             if token.strip().lower().startswith("@") :
                token = "<USR>"
             tweet_tokens.append(token)
@@ -118,7 +125,7 @@ tag2idx, idx2tag = build_dict(train_tags, special_tags)
 
 # In[]:
 
- def words2idxs(tokens_list):
+def words2idxs(tokens_list):
     return [token2idx[word] for word in tokens_list]
 
 def tags2idxs(tags_list):
@@ -363,3 +370,35 @@ def eval_conll(model, session, tokens, tags, short_report=True):
         
     results = precision_recall_f1(y_true, y_pred, print_results=True, short_report=short_report)
     return results
+    
+tf.reset_default_graph()
+
+model =  BiLSTMModel(20505, 21, 200, 200, token2idx['<PAD>'])######### YOUR CODE HERE #############
+
+
+batch_size = 32 ######### YOUR CODE HERE #############
+n_epochs = 4 ######### YOUR CODE HERE #############
+learning_rate = 0.005 ######### YOUR CODE HERE #############
+learning_rate_decay = 1.414 ######### YOUR CODE HERE #############
+dropout_keep_probability = 0.5 ######### YOUR CODE HERE #############
+
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+
+print('Start training... \n')
+for epoch in range(n_epochs):
+    # For each epoch evaluate the model on train and validation data
+    print('-' * 20 + ' Epoch {} '.format(epoch+1) + 'of {} '.format(n_epochs) + '-' * 20)
+    print('Train data evaluation:')
+    eval_conll(model, sess, train_tokens, train_tags, short_report=True)
+    print('Validation data evaluation:')
+    eval_conll(model, sess, validation_tokens, validation_tags, short_report=True)
+
+    # Train the model
+    for x_batch, y_batch, lengths in batches_generator(batch_size, train_tokens, train_tags):
+        model.train_on_batch(sess, x_batch, y_batch, lengths, learning_rate, dropout_keep_probability)
+
+    # Decaying the learning rate
+    learning_rate = learning_rate / learning_rate_decay
+
+print('...training finished.')
