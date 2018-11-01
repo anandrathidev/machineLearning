@@ -13,8 +13,10 @@ Created on Sun Oct 14 15:41:22 2018
 
 import os
 os.getcwd()
+from urllib.parse import urlparse
 
 npath = "D:/Users/anandrathi/DataScience/Coursera/NLP/natural-language-processing-master\week2"
+npath = "C:/Users/anarathi/Documents/Coursera/natural-language-processing-master/week2/"
 os.chdir(npath )
 os.getcwd()
 
@@ -184,29 +186,28 @@ import numpy as np
 
 # In[]:
 class BiLSTMModel():
+  pass
+def declare_placeholders(self):
+  """Specifies placeholders for the model."""
 
-  def declare_placeholders(self):
-      """Specifies placeholders for the model."""
+  # Placeholders for input and ground truth output.
+  self.input_batch = tf.placeholder(dtype=tf.int32, shape=[None, None], name='input_batch')
+  ######### YOUR CODE HERE #############
+  self.ground_truth_tags = tf.placeholder(dtype=tf.int32, shape=[None, None], name='ground_truth_tags')
 
-      # Placeholders for input and ground truth output.
-      self.input_batch = tf.placeholder(dtype=tf.int32, shape=[None, None], name='input_batch')
-      ######### YOUR CODE HERE #############
-      self.ground_truth_tags = tf.placeholder(dtype=tf.int32, shape=[None, None], name='ground_truth_tags')
+  # Placeholder for lengths of the sequences.
+  self.lengths = tf.placeholder(dtype=tf.int32, shape=[None], name='lengths')
 
-      # Placeholder for lengths of the sequences.
-      self.lengths = tf.placeholder(dtype=tf.int32, shape=[None], name='lengths')
+  # Placeholder for a dropout keep probability. If we don't feed
+  # a value for this placeholder, it will be equal to 1.0.
+  self.dropout_ph = tf.placeholder_with_default(tf.cast(1.0, tf.float32), shape=[])
 
-      # Placeholder for a dropout keep probability. If we don't feed
-      # a value for this placeholder, it will be equal to 1.0.
-      self.dropout_ph = tf.placeholder_with_default(tf.cast(1.0, tf.float32), shape=[])
+  # Placeholder for a learning rate (tf.float32).
+  ######### YOUR CODE HERE #############
+  self.learning_rate_ph = tf.placeholder_with_default(tf.cast(0.5, tf.float32), shape=[])
 
-      # Placeholder for a learning rate (tf.float32).
-      ######### YOUR CODE HERE #############
-      self.learning_rate_ph = tf.placeholder_with_default(tf.cast(0.5, tf.float32), shape=[])
 
-  BiLSTMModel.__declare_placeholders = classmethod(declare_placeholders)
-
-  def build_layers(self, vocabulary_size, embedding_dim, n_hidden_rnn, n_tags):
+def build_layers(self, vocabulary_size, embedding_dim, n_hidden_rnn, n_tags):
     """Specifies bi-LSTM architecture and computes logits for inputs."""
 
     # Create embedding variable (tf.Variable) with dtype tf.float32
@@ -249,9 +250,8 @@ class BiLSTMModel():
     self.logits = tf.layers.dense(rnn_output, n_tags, activation=None)
 
 
-  BiLSTMModel.__build_layers = classmethod(build_layers)
 
-  def compute_predictions(self):
+def compute_predictions(self):
     """Transforms logits to probabilities and finds the most probable tags."""
     
     # Create softmax (tf.nn.softmax) function
@@ -261,9 +261,8 @@ class BiLSTMModel():
     # otherwise argmax will be calculated in a wrong way
     self.predictions = tf.argmax(softmax_output, axis = -1) ######### YOUR CODE HERE #############  
 
-  BiLSTMModel.__compute_predictions = classmethod(compute_predictions)
 
-  def compute_loss(self, n_tags, PAD_index):
+def compute_loss(self, n_tags, PAD_index):
     """Computes masked cross-entopy loss with logits."""
     
     # Create cross entropy function function (tf.nn.softmax_cross_entropy_with_logits)
@@ -276,7 +275,7 @@ class BiLSTMModel():
     # multiplication of mask and loss_tensor.
     self.loss =   tf.reduce_mean(tf.reduce_sum(mask * loss_tensor, axis = -1)/tf.reduce_sum(mask,axis = -1)) ######### YOUR CODE HERE #############  
     
-  def perform_optimization(self):
+def perform_optimization(self):
     """Specifies the optimizer and train_op for the model."""
     
     # Create an optimizer (tf.train.AdamOptimizer)
@@ -292,19 +291,17 @@ class BiLSTMModel():
     
     self.train_op = self.optimizer.apply_gradients(self.grads_and_vars)    
 
-  BiLSTMModel.__perform_optimization = classmethod(perform_optimization)
 
-  def init_model(self, vocabulary_size, n_tags, embedding_dim, n_hidden_rnn, PAD_index):
+def init_model(self, vocabulary_size, n_tags, embedding_dim, n_hidden_rnn, PAD_index):
     self.__declare_placeholders()
     self.__build_layers(vocabulary_size, embedding_dim, n_hidden_rnn, n_tags)
     self.__compute_predictions()
     self.__compute_loss(n_tags, PAD_index)
     self.__perform_optimization()  
     
-  BiLSTMModel.__init__ = classmethod(init_model)
 
   
-  def train_on_batch(self, session, x_batch, y_batch, lengths, learning_rate, dropout_keep_probability):
+def train_on_batch(self, session, x_batch, y_batch, lengths, learning_rate, dropout_keep_probability):
       feed_dict = {self.input_batch: x_batch,
                    self.ground_truth_tags: y_batch,
                    self.learning_rate_ph: learning_rate,
@@ -313,9 +310,8 @@ class BiLSTMModel():
       
       session.run(self.train_op, feed_dict=feed_dict)
   
-  BiLSTMModel.train_on_batch = classmethod(train_on_batch)
 
-  def predict_for_batch(self, session, x_batch, lengths):
+def predict_for_batch(self, session, x_batch, lengths):
     ######################################
     ######### YOUR CODE HERE #############
     ######################################
@@ -325,7 +321,14 @@ class BiLSTMModel():
     predictions = session.run(self.predictions, feed_dict = feed_dict)
     return predictions
   
-  BiLSTMModel.predict_for_batch = classmethod(predict_for_batch)
+BiLSTMModel.__declare_placeholders = classmethod(declare_placeholders)
+BiLSTMModel.__build_layers = classmethod(build_layers)
+BiLSTMModel.__compute_predictions = classmethod(compute_predictions)
+BiLSTMModel.__compute_loss = classmethod(compute_loss)
+BiLSTMModel.__perform_optimization = classmethod(perform_optimization)
+BiLSTMModel.__init__ = classmethod(init_model)
+BiLSTMModel.train_on_batch = classmethod(train_on_batch)
+BiLSTMModel.predict_for_batch = classmethod(predict_for_batch)
   
   
 # In[]:
@@ -376,11 +379,11 @@ tf.reset_default_graph()
 model =  BiLSTMModel(20505, 21, 200, 200, token2idx['<PAD>'])######### YOUR CODE HERE #############
 
 
-batch_size = 32 ######### YOUR CODE HERE #############
-n_epochs = 4 ######### YOUR CODE HERE #############
-learning_rate = 0.005 ######### YOUR CODE HERE #############
-learning_rate_decay = 1.414 ######### YOUR CODE HERE #############
-dropout_keep_probability = 0.5 ######### YOUR CODE HERE #############
+batch_size = 32*2 ######### YOUR CODE HERE #############
+n_epochs = 30 ######### YOUR CODE HERE #############
+learning_rate = 0.07 ######### YOUR CODE HERE #############
+learning_rate_decay = 1.214 ######### YOUR CODE HERE #############
+dropout_keep_probability = 0.25 ######### YOUR CODE HERE #############
 
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
