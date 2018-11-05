@@ -65,6 +65,20 @@ validation_tokens, validation_tags = read_data('data/validation.txt')
 test_tokens, test_tags = read_data('data/test.txt')
 
 # In[]:
+
+train_tokens_list = list(set([t for tl in train_tokens for t in tl]))
+print(len(train_tokens_list))
+train_tags_list = list(set([t for tl in train_tags for t in tl]))
+print(len(train_tags_list))
+
+
+test_tokens_list = list(set([t for tl in test_tokens for t in tl]))
+print(len(test_tokens_list))
+test_tags_list = list(set([t for tl in test_tags for t in tl]))
+print(len(test_tags_list))
+
+
+# In[]:
 for i in range(3):
     for token, tag in zip(train_tokens[i], train_tags[i]):
         print('%s\t%s' % (token, tag))
@@ -376,13 +390,13 @@ def eval_conll(model, session, tokens, tags, short_report=True):
     
 tf.reset_default_graph()
 
-model =  BiLSTMModel(20505, 21, 200, 200, token2idx['<PAD>'])######### YOUR CODE HERE #############
+model =  BiLSTMModel(20526, 21, 200, 200, token2idx['<PAD>'])######### YOUR CODE HERE #############
 
 
 batch_size = 32*2 ######### YOUR CODE HERE #############
 n_epochs = 30 ######### YOUR CODE HERE #############
-learning_rate = 0.07 ######### YOUR CODE HERE #############
-learning_rate_decay = 1.214 ######### YOUR CODE HERE #############
+learning_rate = 0.09 ######### YOUR CODE HERE #############
+learning_rate_decay = 1.3 ######### YOUR CODE HERE #############
 dropout_keep_probability = 0.25 ######### YOUR CODE HERE #############
 
 sess = tf.Session()
