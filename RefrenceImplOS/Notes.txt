@@ -1,4 +1,47 @@
+******************************************************************************************************
+******************************************************************************************************
+TEXT
+******************************************************************************************************
+******************************************************************************************************
 
+SUSI.AI, Your Artificial Intelligence for Personal Assistants, Robots, Help Desks and Chatbots.
+
+https://github.com/alfredfrancis/ai-chatbot-framework
+
+https://botpress.io/
+BOTPRESS
+Botpress sells itself as the WordPress of Chatbots i.e. an open-source bot building platform.
+Botpress is built using a modular blueprint. You can snap pieces off and add new bits on an existing code frame.
+
+
+https://rocket.chat/docs/
+
+https://rasa.com/
+The Rasa Stack is a set of open source machine learning tools. Developers can use these tools to create chatbots and assistants.
+Rasa Stack has two major components that are independent of each other; a ‘core’ and ‘NLU’.
+
+
+ANA.CHAT
+Ana prides itself on being the World’s First Open-Source ChatBot Framework.
+Free for personal and commercial use, Ana can knock precious days off your chatbot development.
+
+SummarizeBot is a free Facebook Messenger bot to summarize documents, images, articles, and audio files. It is an AI-powered bot which can easily create a summarized version of text from the supported files on Facebook Messenger. The best feature of our bot is that it allows you to choose the summary intensity by dragging a simple slider back and forth. Apart from that, it can also show you a pie graph of informative keywords from the file and some key fragments of the content. It even lets you export the summarized version of files as PDF.
+
+spaCy - Python library for advanced natural language processing.
+Botkit - Open Source bot building blocks for Slack, Facebook Messenger, Twilio, Microsoft with Botkit Studio - a hosted development environment
+Claudia Bot Builder - Open Source library to create chat bots for FB, Slack, Skype and Telegram and deploy to AWS Lambda
+AIVA -General-purpose virtual assistant for developers.
+Bottr - Open Source bot framework (nodejs).
+RedBot - A Node-RED plugin to create multi-platform bots visually (nodejs).
+Botman - an open-source framework in PHP
+Bottender - an open-source chatbot framework in NodeJS
+
+
+******************************************************************************************************
+******************************************************************************************************
+VOICE
+******************************************************************************************************
+******************************************************************************************************
 https://mycroft.ai/
 Mycroft is an open source voice assistant built for Linux machines, can be installed on Linux desktops and Raspberry Pi. Mycroft is a privacy oriented which doesn’t collect and monetize your data.
 
@@ -27,4 +70,7 @@ Jovo is an open source platform to build voice-enabled applications on top of Am
 10-Hey Athena
 
 Hey, Athena Is a free open source modular voice assistant framework. It was built for developers. However, Hey Athena website is down, so as documentation and the code has not been updated for about a year, Though the project code is available for developers.
+
+
+
 
