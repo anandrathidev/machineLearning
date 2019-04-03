@@ -1,1 +1,30 @@
 
+https://mycroft.ai/
+Mycroft is an open source voice assistant built for Linux machines, can be installed on Linux desktops and Raspberry Pi. Mycroft is a privacy oriented which doesn’t collect and monetize your data.
+
+
+Kalliope is an open source modular based voice-controlled personal assistant designed specifically for home automation. It was built to run on Linux, Raspberry Pi, and Android phones.
+
+3- Stephanie
+Stephanie is an open-source platform built specifically for voice-controlled applications as well as to automate daily tasks imitating much of a virtual assistant's work.
+
+4-Open Assistant
+Open Assistant is an open source personal assistant. It responds to voice commands in a conversational rich dialog as in the demonstration video. It has been in the prototyping phase for so long, yet it manages to be in the watch for developers and as it has been forked many times.
+
+
+5- Dragonfire
+Dragonfire is a virtual assistant built specifically for Ubuntu-Linux distributions. It provides an Android client that can be installed on Google Play store.  
+
+7- Jarvis
+Jarvis is an open source assistant, It can be installed and run through the terminal of Linux, Mac OSX and Windows. It has a modular structure. It has voice assistant features. Though the project is still in active development. It's mainly for developers and advanced users in the current state.
+
+8- Linto
+Linto is an open source voice assistant, built for business. It focuses on automation the meeting tasks. Linto has an open source based device aiming to provide a customizable platform for developers, smart speakers manufactures, and replace desk phone hardware.
+
+9-Jovo
+Jovo is an open source platform to build voice-enabled applications on top of Amazon Alexa and Google Assistant. With one code base, The developer can create their application and deploy it with ease.
+
+10-Hey Athena
+
+Hey, Athena Is a free open source modular voice assistant framework. It was built for developers. However, Hey Athena website is down, so as documentation and the code has not been updated for about a year, Though the project code is available for developers.
+
