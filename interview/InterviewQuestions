@@ -1,7 +1,52 @@
-.	What do you understand by Type I vs Type II error?
-2.	You have been asked to evaluate a regression model based on R², adjusted R² and tolerance. What will be your criteria?
-3.	In k-means or kNN, we use Euclidean distance to calculate the distance between nearest neighbours. Why not Manhattan distance?
-4.	A roulette wheel has 38 slots, 18 are red, 18 are black, and 2 are green. You play five games and always bet on red. What is the probability that you win all the 5 games?
+.>.	What do you understand by Type I vs Type II error?
+
+In statistical hypothesis testing, a type I error is the mistaken rejection of the null hypothesis (also known as a "false positive" finding 
+or conclusion; example: "an innocent person is convicted"), 
+while a type II error is the mistaken acceptance of the null hypothesis (also known as a "false negative" finding or conclusion; 
+example: "a guilty person is not convicted").
+[1] Much of statistical theory revolves around the minimization of one or both of these errors, 
+though the complete elimination of either is a statistical impossibility for non-deterministic algorithms.
+By selecting a low threshold (cut-off) value and modifying the alpha (p) level, the quality of the hypothesis test can be increased. 
+
+
+.>.	You have been asked to evaluate a regression model based on R², adjusted R² and tolerance. What will be your criteria?
+from [https://www.quora.com/You-have-been-asked-to-evaluate-a-regression-model-based-on-R%C2%B2-adjusted-R%C2%B2-and-tolerance-What-will-be-your-criteria]
+So in theory, the higher all of these values are then the better your model should be. Eg. If R^2 is close to 1 then the model is explaining the majority of the variance in your data. If adj R^2 is close to R^2 then you don’t have wasted variables in your model. If your tolerance is high, or at least above a minimum, then your model should not be suffering from significant levels of multicollinearity.
+However, it is SO case specific. For instance, tolerance ‘minimums’ vary extremely widely in research from .1 - .25 depending on the context (and i’m sure you could find cases beyond this range). A good R^2 could be extremely low - in the case of stock market investment for instance, or extremely high.
+Therefore, making judgements based on these criteria alone would inevitably put you at risk of failure. However, if a gun was held to my head, the criteria set out in my first paragraph would be the go to.
+ <Rsquared and adj-Rsquared should be somewhat closer. If the adj-Rsquared falls very badly from r-squared, it suggests there could be overfitting.>
+
+Linear relationship
+Multivariate normality
+No or little multicollinearity
+No auto-correlation
+Homoscedasticity
+
+.>.		In k-means or kNN, we use Euclidean distance to calculate the distance between nearest neighbours. Why not Manhattan distance?
+No, KNN is generic and you can use any valid metric you want. For example, cosine distance is another metric that is used frequently. 
+Here is an implementation in scikit-learn where you can choose among several distance options. You can also define your own metric to use.
+K-means is slightly different. 
+It really uses Euclidean distance, and it becomes a harder problem for generic metrics. 
+However, k-medians is a variation of k-means with L1 distance. it has variations such as k-medians (using L1 distance). 
+k-medoids is another generalization of this algorithm where the cluster center is chosen among the data points and you can use any metric with it.
+
+.>.		A roulette wheel has 38 slots, 18 are red, 18 are black, and 2 are green. 
+You play five games and always bet on red. What is the probability that you win all the 5 games?
+We know that a roulette wheel has 38 slots, 18 are red, 18 are black, and 2 are green.You play five games and always bet on red.
+
+Therefore, we have
+a) We  can you expect to win 5·0.47= 2.35 games.
+b) We calculate the  probability that you will win all five games.
+Therefore, the probability is P=0.0229.
+c)  We calculate the probability that you will win  three or more games.
+Therefore, the probability is P=0.71.
+
 5.	‘People who bought this, also bought…’ recommendations seen on amazon is a result of which algorithm?
+This algorithm is implemented in most e-commerce websites. The logic behind it is quite simple: Suppose client#1 buys product A and B. 
+When client#2 buys only product A then product B will be recommended to client#2. An e-commerce website like Amazon with so many users will have very large data sets thus a robust recommendation system.
+
+
 6.	State the difference between the expected value and mean value
+
+
 7.	What is Ensemble Learning, stacking?
