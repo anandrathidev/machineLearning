@@ -1,0 +1,7 @@
+.	What do you understand by Type I vs Type II error?
+2.	You have been asked to evaluate a regression model based on R², adjusted R² and tolerance. What will be your criteria?
+3.	In k-means or kNN, we use Euclidean distance to calculate the distance between nearest neighbours. Why not Manhattan distance?
+4.	A roulette wheel has 38 slots, 18 are red, 18 are black, and 2 are green. You play five games and always bet on red. What is the probability that you win all the 5 games?
+5.	‘People who bought this, also bought…’ recommendations seen on amazon is a result of which algorithm?
+6.	State the difference between the expected value and mean value
+7.	What is Ensemble Learning, stacking?
